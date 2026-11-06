@@ -1,0 +1,1197 @@
+{
+  "floors": {
+    "floor_01": {
+      "objects": [
+        {
+          "id": "manual_on_table",
+          "rect": [
+            816,
+            316,
+            200,
+            127
+          ],
+          "role": "repair_component",
+          "z": 2
+        },
+        {
+          "id": "wall_crack_section",
+          "rect": [
+            318,
+            115,
+            430,
+            220
+          ],
+          "role": "repair_component",
+          "z": -11
+        },
+        {
+          "id": "pressure_dial",
+          "rect": [
+            729,
+            211,
+            105,
+            94
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "desk_scrolls",
+          "rect": [
+            923,
+            365,
+            114,
+            94
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "shelf_crates",
+          "rect": [
+            834,
+            201,
+            241,
+            138
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "shelf_jars",
+          "rect": [
+            866,
+            39,
+            199,
+            178
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "front_barrel",
+          "rect": [
+            715,
+            359,
+            90,
+            99
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "rear_barrel",
+          "rect": [
+            653,
+            278,
+            86,
+            90
+          ],
+          "role": "fine_prop",
+          "z": -7
+        },
+        {
+          "id": "wall_lantern",
+          "rect": [
+            433,
+            0,
+            87,
+            138
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            347,
+            536,
+            377
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            774,
+            302,
+            312,
+            215
+          ],
+          "role": "structural_group",
+          "z": 8
+        },
+        {
+          "id": "supply_shelf",
+          "rect": [
+            829,
+            43,
+            257,
+            296
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.73,
+            0.18,
+            0.23,
+            0.32
+          ],
+          "z": -8
+        },
+        {
+          "id": "pressure_gauge",
+          "rect": [
+            709,
+            185,
+            162,
+            213
+          ],
+          "role": "structural_group",
+          "z": -7
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            0,
+            335,
+            443
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_02": {
+      "objects": [
+        {
+          "id": "outlet_valve",
+          "rect": [
+            627,
+            263,
+            113,
+            133
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "pump_core",
+          "rect": [
+            414,
+            191,
+            244,
+            202
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            48,
+            365,
+            976,
+            277
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "intake_valve",
+          "rect": [
+            326,
+            183,
+            91,
+            113
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "manual_and_tools",
+          "rect": [
+            820,
+            379,
+            204,
+            104
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "drain_grate",
+          "rect": [
+            261,
+            394,
+            173,
+            79
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "control_box",
+          "rect": [
+            808,
+            184,
+            98,
+            126
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "pressure_indicator",
+          "rect": [
+            877,
+            76,
+            86,
+            155
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "filter_tank",
+          "rect": [
+            315,
+            111,
+            124,
+            247
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "intake_tank",
+          "rect": [
+            266,
+            150,
+            88,
+            190
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "wall_lantern",
+          "rect": [
+            233,
+            42,
+            66,
+            114
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            351,
+            1024,
+            417
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            791,
+            192,
+            233,
+            349
+          ],
+          "role": "structural_group",
+          "z": 7
+        },
+        {
+          "id": "pipe_assembly",
+          "rect": [
+            272,
+            0,
+            589,
+            435
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.35,
+            0.15,
+            0.36,
+            0.39
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            43,
+            225,
+            383
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_03": {
+      "objects": [
+        {
+          "id": "generator_rotor",
+          "rect": [
+            587,
+            163,
+            303,
+            228
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "fuse_bank",
+          "rect": [
+            359,
+            203,
+            140,
+            144
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            50,
+            364,
+            974,
+            283
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "drain_grate",
+          "rect": [
+            337,
+            422,
+            207,
+            115
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "right_switch_panel",
+          "rect": [
+            803,
+            69,
+            161,
+            206
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "red_controller",
+          "rect": [
+            676,
+            42,
+            110,
+            149
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "middle_breaker_panel",
+          "rect": [
+            550,
+            68,
+            100,
+            181
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "upper_alarm_panel",
+          "rect": [
+            460,
+            27,
+            91,
+            131
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "left_switch_panel",
+          "rect": [
+            312,
+            60,
+            147,
+            165
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "wall_lantern",
+          "rect": [
+            229,
+            40,
+            72,
+            119
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            347,
+            1024,
+            421
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            735,
+            284,
+            289,
+            280
+          ],
+          "role": "structural_group",
+          "z": 7
+        },
+        {
+          "id": "electrical_cabinets",
+          "rect": [
+            230,
+            0,
+            771,
+            371
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.54,
+            0.14,
+            0.3,
+            0.4
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            42,
+            227,
+            370
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_04": {
+      "objects": [
+        {
+          "id": "front_gear",
+          "rect": [
+            394,
+            207,
+            265,
+            271
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "rear_gear",
+          "rect": [
+            519,
+            123,
+            241,
+            254
+          ],
+          "role": "repair_component",
+          "z": -7
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            50,
+            365,
+            974,
+            285
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "oil_bucket",
+          "rect": [
+            708,
+            378,
+            108,
+            130
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "manual_on_bench",
+          "rect": [
+            810,
+            315,
+            214,
+            116
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "detached_gear",
+          "rect": [
+            430,
+            406,
+            239,
+            128
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "rear_cog",
+          "rect": [
+            446,
+            113,
+            167,
+            168
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "left_handwheel",
+          "rect": [
+            317,
+            119,
+            94,
+            106
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "upper_gear",
+          "rect": [
+            393,
+            41,
+            128,
+            132
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "wall_lantern",
+          "rect": [
+            231,
+            42,
+            68,
+            113
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            348,
+            1024,
+            420
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            779,
+            292,
+            245,
+            237
+          ],
+          "role": "structural_group",
+          "z": 7
+        },
+        {
+          "id": "gear_train",
+          "rect": [
+            257,
+            23,
+            597,
+            475
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.31,
+            0.12,
+            0.44,
+            0.48
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            45,
+            227,
+            364
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_05": {
+      "objects": [
+        {
+          "id": "right_mirror",
+          "rect": [
+            642,
+            225,
+            133,
+            237
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "center_mirror",
+          "rect": [
+            395,
+            123,
+            213,
+            319
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "left_mirror",
+          "rect": [
+            286,
+            178,
+            140,
+            225
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            47,
+            375,
+            977,
+            276
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "manual_on_bench",
+          "rect": [
+            803,
+            359,
+            221,
+            123
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "right_banner",
+          "rect": [
+            728,
+            0,
+            93,
+            239
+          ],
+          "role": "fine_prop",
+          "z": -11
+        },
+        {
+          "id": "left_banner",
+          "rect": [
+            373,
+            0,
+            98,
+            242
+          ],
+          "role": "fine_prop",
+          "z": -11
+        },
+        {
+          "id": "floor_lever",
+          "rect": [
+            189,
+            358,
+            106,
+            124
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "red_crystal",
+          "rect": [
+            731,
+            230,
+            112,
+            216
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "sun_emitter",
+          "rect": [
+            509,
+            39,
+            176,
+            169
+          ],
+          "role": "fine_prop",
+          "z": -6
+        },
+        {
+          "id": "wall_lantern",
+          "rect": [
+            228,
+            43,
+            76,
+            117
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            358,
+            1024,
+            410
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            792,
+            363,
+            232,
+            205
+          ],
+          "role": "structural_group",
+          "z": 8
+        },
+        {
+          "id": "mirror_array",
+          "rect": [
+            275,
+            43,
+            529,
+            450
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.32,
+            0.14,
+            0.35,
+            0.44
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            49,
+            226,
+            373
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_06": {
+      "objects": [
+        {
+          "id": "emitter_head",
+          "rect": [
+            836,
+            192,
+            147,
+            155
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "lens_face",
+          "rect": [
+            329,
+            69,
+            370,
+            386
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            47,
+            374,
+            977,
+            276
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "back_ladder",
+          "rect": [
+            704,
+            0,
+            114,
+            380
+          ],
+          "role": "fine_prop",
+          "z": -11
+        },
+        {
+          "id": "lens_support",
+          "rect": [
+            285,
+            350,
+            474,
+            184
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "calibration_vials",
+          "rect": [
+            344,
+            460,
+            246,
+            127
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "manual_on_bench",
+          "rect": [
+            308,
+            488,
+            238,
+            116
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "red_toolkit",
+          "rect": [
+            255,
+            450,
+            126,
+            96
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "upper_wall_lantern",
+          "rect": [
+            347,
+            35,
+            76,
+            117
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "lower_wall_lamp",
+          "rect": [
+            195,
+            164,
+            70,
+            109
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            346,
+            1024,
+            422
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "workbench",
+          "rect": [
+            248,
+            448,
+            356,
+            223
+          ],
+          "role": "structural_group",
+          "z": 9
+        },
+        {
+          "id": "light_emitter",
+          "rect": [
+            773,
+            186,
+            237,
+            250
+          ],
+          "role": "structural_group",
+          "z": -7
+        },
+        {
+          "id": "focus_ring",
+          "rect": [
+            302,
+            43,
+            455,
+            464
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.3,
+            0.12,
+            0.43,
+            0.53
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            52,
+            227,
+            355
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    },
+    "floor_07": {
+      "objects": [
+        {
+          "id": "lamp_light_core",
+          "rect": [
+            463,
+            173,
+            138,
+            219
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "direction_wheel",
+          "rect": [
+            834,
+            384,
+            158,
+            162
+          ],
+          "role": "repair_component",
+          "z": 2
+        },
+        {
+          "id": "lamp_chamber",
+          "rect": [
+            354,
+            153,
+            327,
+            317
+          ],
+          "role": "repair_component",
+          "z": -6
+        },
+        {
+          "id": "front_rail",
+          "rect": [
+            28,
+            397,
+            996,
+            297
+          ],
+          "role": "foreground_occluder",
+          "z": 10
+        },
+        {
+          "id": "blue_toolbox",
+          "rect": [
+            844,
+            495,
+            180,
+            156
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "repair_manual",
+          "rect": [
+            709,
+            505,
+            167,
+            109
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "console_buttons",
+          "rect": [
+            290,
+            485,
+            484,
+            134
+          ],
+          "role": "fine_prop",
+          "z": 2
+        },
+        {
+          "id": "lamp_roof",
+          "rect": [
+            337,
+            16,
+            383,
+            197
+          ],
+          "role": "fine_prop",
+          "z": -5
+        },
+        {
+          "id": "right_wall_lantern",
+          "rect": [
+            916,
+            260,
+            82,
+            132
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "left_wall_lantern",
+          "rect": [
+            148,
+            137,
+            68,
+            103
+          ],
+          "role": "fine_prop",
+          "z": -9
+        },
+        {
+          "id": "front_parapet",
+          "rect": [
+            0,
+            358,
+            1024,
+            410
+          ],
+          "role": "structural_group",
+          "z": 12
+        },
+        {
+          "id": "side_controls",
+          "rect": [
+            791,
+            329,
+            233,
+            284
+          ],
+          "role": "structural_group",
+          "z": 7
+        },
+        {
+          "id": "control_console",
+          "rect": [
+            270,
+            470,
+            588,
+            184
+          ],
+          "role": "structural_group",
+          "z": 9
+        },
+        {
+          "id": "main_lamp",
+          "rect": [
+            277,
+            18,
+            465,
+            503
+          ],
+          "role": "structural_group",
+          "walk_blocker": [
+            0.31,
+            0.1,
+            0.44,
+            0.59
+          ],
+          "z": -8
+        },
+        {
+          "id": "upper_stairs",
+          "rect": [
+            0,
+            47,
+            205,
+            369
+          ],
+          "role": "structural_group",
+          "z": -15
+        }
+      ]
+    }
+  },
+  "version": 1
+}

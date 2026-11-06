@@ -1,0 +1,231 @@
+{
+  "format": "WAV PCM 16-bit mono 44.1kHz",
+  "count": 45,
+  "sounds": [
+    {
+      "file": "ui/ui_hover.wav",
+      "description": "按钮悬停",
+      "loop": false
+    },
+    {
+      "file": "ui/ui_click.wav",
+      "description": "按钮点击",
+      "loop": false
+    },
+    {
+      "file": "ui/ui_confirm.wav",
+      "description": "确认",
+      "loop": false
+    },
+    {
+      "file": "ui/ui_cancel.wav",
+      "description": "取消",
+      "loop": false
+    },
+    {
+      "file": "ui/ui_error.wav",
+      "description": "错误提示",
+      "loop": false
+    },
+    {
+      "file": "ui/manual_page.wav",
+      "description": "维修手册翻页",
+      "loop": false
+    },
+    {
+      "file": "ui/task_reveal.wav",
+      "description": "新任务出现",
+      "loop": false
+    },
+    {
+      "file": "ui/medal_unlock.wav",
+      "description": "奖章解锁",
+      "loop": false
+    },
+    {
+      "file": "player/footstep_stone_01.wav",
+      "description": "石地脚步一",
+      "loop": false
+    },
+    {
+      "file": "player/footstep_stone_02.wav",
+      "description": "石地脚步二",
+      "loop": false
+    },
+    {
+      "file": "player/footstep_wet_01.wav",
+      "description": "湿石脚步一",
+      "loop": false
+    },
+    {
+      "file": "player/footstep_wet_02.wav",
+      "description": "湿石脚步二",
+      "loop": false
+    },
+    {
+      "file": "player/toolbag_rustle.wav",
+      "description": "工具包摩擦",
+      "loop": false
+    },
+    {
+      "file": "ambience/coastal_wind_loop.wav",
+      "description": "海塔风声循环",
+      "loop": true
+    },
+    {
+      "file": "ambience/rain_room_loop.wav",
+      "description": "室内雨水与滴水循环",
+      "loop": true
+    },
+    {
+      "file": "ambience/machinery_hum_loop.wav",
+      "description": "机械低鸣循环",
+      "loop": true
+    },
+    {
+      "file": "floor_01/salt_scrape.wav",
+      "description": "刮除盐霜",
+      "loop": false
+    },
+    {
+      "file": "floor_01/stone_tap.wav",
+      "description": "敲击检查石基",
+      "loop": false
+    },
+    {
+      "file": "floor_01/mortar_spread.wav",
+      "description": "抹涂修补砂浆",
+      "loop": false
+    },
+    {
+      "file": "floor_01/pressure_test.wav",
+      "description": "承压测试",
+      "loop": false
+    },
+    {
+      "file": "floor_02/pipe_clank.wav",
+      "description": "金属管拼接",
+      "loop": false
+    },
+    {
+      "file": "floor_02/water_leak.wav",
+      "description": "漏水",
+      "loop": false
+    },
+    {
+      "file": "floor_02/valve_turn.wav",
+      "description": "阀门转动",
+      "loop": false
+    },
+    {
+      "file": "floor_02/pump_start.wav",
+      "description": "水泵启动",
+      "loop": false
+    },
+    {
+      "file": "floor_03/electric_crackle.wav",
+      "description": "电弧与短路",
+      "loop": false
+    },
+    {
+      "file": "floor_03/fuse_insert.wav",
+      "description": "保险丝插入",
+      "loop": false
+    },
+    {
+      "file": "floor_03/switch_throw.wav",
+      "description": "电闸合闸",
+      "loop": false
+    },
+    {
+      "file": "floor_03/power_restore.wav",
+      "description": "供电恢复",
+      "loop": false
+    },
+    {
+      "file": "floor_04/gear_jam.wav",
+      "description": "齿轮卡滞",
+      "loop": false
+    },
+    {
+      "file": "floor_04/gear_fit.wav",
+      "description": "齿轮啮合",
+      "loop": false
+    },
+    {
+      "file": "floor_04/oil_squeeze.wav",
+      "description": "注油",
+      "loop": false
+    },
+    {
+      "file": "floor_04/gear_running.wav",
+      "description": "齿轮稳定运转",
+      "loop": false
+    },
+    {
+      "file": "floor_05/glass_wipe.wav",
+      "description": "擦拭镜片",
+      "loop": false
+    },
+    {
+      "file": "floor_05/glass_tap.wav",
+      "description": "镜片检查",
+      "loop": false
+    },
+    {
+      "file": "floor_05/lens_place.wav",
+      "description": "镜片安装",
+      "loop": false
+    },
+    {
+      "file": "floor_05/test_beam.wav",
+      "description": "光路测试",
+      "loop": false
+    },
+    {
+      "file": "floor_06/mirror_swivel.wav",
+      "description": "反射镜转动",
+      "loop": false
+    },
+    {
+      "file": "floor_06/focus_adjust.wav",
+      "description": "焦距微调",
+      "loop": false
+    },
+    {
+      "file": "floor_06/thermal_warning.wav",
+      "description": "温度警告",
+      "loop": false
+    },
+    {
+      "file": "floor_06/focus_lock.wav",
+      "description": "焦点锁定",
+      "loop": false
+    },
+    {
+      "file": "floor_07/control_beep.wav",
+      "description": "控制台确认",
+      "loop": false
+    },
+    {
+      "file": "floor_07/compass_rotate.wav",
+      "description": "方位盘旋转",
+      "loop": false
+    },
+    {
+      "file": "floor_07/main_breaker.wav",
+      "description": "主断路器合闸",
+      "loop": false
+    },
+    {
+      "file": "floor_07/lighthouse_start.wav",
+      "description": "主灯启动",
+      "loop": false
+    },
+    {
+      "file": "floor_07/full_success.wav",
+      "description": "灯塔完全复明",
+      "loop": false
+    }
+  ]
+}

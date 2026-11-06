@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "status": "independent_complete_with_v2_refinements",
+  "preferred_overrides": {
+    "floor_07": [
+      "left_wall_lantern",
+      "side_controls",
+      "main_lamp",
+      "upper_stairs"
+    ]
+  },
+  "floors": {
+    "floor_01": {
+      "count": 14,
+      "objects": [
+        "manual_on_table",
+        "wall_crack_section",
+        "pressure_dial",
+        "desk_scrolls",
+        "shelf_crates",
+        "shelf_jars",
+        "front_barrel",
+        "rear_barrel",
+        "wall_lantern",
+        "front_parapet",
+        "workbench",
+        "supply_shelf",
+        "pressure_gauge",
+        "upper_stairs"
+      ]
+    },
+    "floor_02": {
+      "count": 15,
+      "objects": [
+        "outlet_valve",
+        "pump_core",
+        "front_rail",
+        "intake_valve",
+        "manual_and_tools",
+        "drain_grate",
+        "control_box",
+        "pressure_indicator",
+        "filter_tank",
+        "intake_tank",
+        "wall_lantern",
+        "front_parapet",
+        "workbench",
+        "pipe_assembly",
+        "upper_stairs"
+      ]
+    },
+    "floor_03": {
+      "count": 14,
+      "objects": [
+        "generator_rotor",
+        "fuse_bank",
+        "front_rail",
+        "drain_grate",
+        "right_switch_panel",
+        "red_controller",
+        "middle_breaker_panel",
+        "upper_alarm_panel",
+        "left_switch_panel",
+        "wall_lantern",
+        "front_parapet",
+        "workbench",
+        "electrical_cabinets",
+        "upper_stairs"
+      ]
+    },
+    "floor_04": {
+      "count": 14,
+      "objects": [
+        "front_gear",
+        "rear_gear",
+        "front_rail",
+        "oil_bucket",
+        "manual_on_bench",
+        "detached_gear",
+        "rear_cog",
+        "left_handwheel",
+        "upper_gear",
+        "wall_lantern",
+        "front_parapet",
+        "workbench",
+        "gear_train",
+        "upper_stairs"
+      ]
+    },
+    "floor_05": {
+      "count": 15,
+      "objects": [
+        "right_mirror",
+        "center_mirror",
+        "left_mirror",
+        "front_rail",
+        "manual_on_bench",
+        "right_banner",
+        "left_banner",
+        "floor_lever",
+        "red_crystal",
+        "sun_emitter",
+        "wall_lantern",
+        "front_parapet",
+        "workbench",
+        "mirror_array",
+        "upper_stairs"
+      ]
+    },
+    "floor_06": {
+      "count": 15,
+      "objects": [
+        "emitter_head",
+        "lens_face",
+        "front_rail",
+        "back_ladder",
+        "lens_support",
+        "calibration_vials",
+        "manual_on_bench",
+        "red_toolkit",
+        "upper_wall_lantern",
+        "lower_wall_lamp",
+        "front_parapet",
+        "workbench",
+        "light_emitter",
+        "focus_ring",
+        "upper_stairs"
+      ]
+    },
+    "floor_07": {
+      "count": 15,
+      "objects": [
+        "lamp_light_core",
+        "direction_wheel",
+        "lamp_chamber",
+        "front_rail",
+        "blue_toolbox",
+        "repair_manual",
+        "console_buttons",
+        "lamp_roof",
+        "right_wall_lantern",
+        "left_wall_lantern",
+        "front_parapet",
+        "side_controls",
+        "control_console",
+        "main_lamp",
+        "upper_stairs"
+      ]
+    }
+  },
+  "total": 102
+}

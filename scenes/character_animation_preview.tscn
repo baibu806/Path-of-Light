@@ -1,0 +1,88 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_animation_preview.gd" id="1_script"]
+[ext_resource type="SpriteFrames" path="res://assets/characters/main_character_sprite_frames.tres" id="2_frames"]
+
+[sub_resource type="StyleBoxFlat" id="StyleInfo"]
+bg_color = Color(0.055, 0.12, 0.16, 0.95)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.28, 0.54, 0.62, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="CharacterAnimationPreview" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.045, 0.07, 1)
+mouse_filter = 2
+
+[node name="StageGlow" type="ColorRect" parent="."]
+layout_mode = 0
+offset_left = 418.0
+offset_top = 172.0
+offset_right = 1118.0
+offset_bottom = 900.0
+color = Color(0.055, 0.16, 0.2, 0.76)
+mouse_filter = 2
+
+[node name="Character" type="AnimatedSprite2D" parent="."]
+texture_filter = 2
+position = Vector2(768, 535)
+scale = Vector2(0.86, 0.86)
+sprite_frames = ExtResource("2_frames")
+animation = &"idle_front"
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 28.0
+offset_right = 700.0
+offset_bottom = 68.0
+theme_override_colors/font_color = Color(0.89, 0.68, 0.33, 1)
+theme_override_font_sizes/font_size = 20
+text = "MAIN CHARACTER  /  动画检查"
+
+[node name="AnimationName" type="Label" parent="."]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 70.0
+offset_right = 900.0
+offset_bottom = 120.0
+theme_override_colors/font_color = Color(0.91, 0.95, 0.96, 1)
+theme_override_font_sizes/font_size = 32
+text = "idle_front"
+
+[node name="InfoPanel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 917.0
+offset_right = 1236.0
+offset_bottom = 984.0
+theme_override_styles/panel = SubResource("StyleInfo")
+
+[node name="Instructions" type="Label" parent="InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.84, 0.87, 1)
+theme_override_font_sizes/font_size = 17
+text = "← / → 或 A / D 切换　　空格重播　　F 水平翻转"
+horizontal_alignment = 1
+vertical_alignment = 1
+

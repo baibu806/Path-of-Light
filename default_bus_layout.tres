@@ -1,0 +1,17 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://dpon21sdjks42"]
+
+[sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_soft"]
+cutoff_hz = 12000.0
+resonance = 0.25
+
+[sub_resource type="AudioEffectLimiter" id="AudioEffectLimiter_safe"]
+ceiling_db = -3.0
+threshold_db = -8.0
+soft_clip_ratio = 8.0
+
+[resource]
+bus/0/volume_db = -10.0
+bus/0/effect/0/effect = SubResource("AudioEffectLowPassFilter_soft")
+bus/0/effect/0/enabled = true
+bus/0/effect/1/effect = SubResource("AudioEffectLimiter_safe")
+bus/0/effect/1/enabled = true
