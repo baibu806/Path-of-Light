@@ -48,6 +48,8 @@ const PLAYER_SCALE := 0.37
 const PLAYER_SPEED := 230.0
 const INTERACT_DISTANCE := 130.0
 const STAIR_DISTANCE := 135.0
+const C_READY := Color("59e5ff")
+const C_DONE := Color("9df2b5")
 const MEDAL_IDS := ["foundation", "drainage", "power", "machinery", "reflection", "focus", "dawn_guardian"]
 const MEDAL_NAMES := ["地基守护", "疏水修复", "电力恢复", "机械调校", "镜面反射", "焦点校准", "黎明守望"]
 
@@ -98,9 +100,14 @@ var floors := [
 
 var floor_index := 0
 var progress := [0, 0, 0, 0, 0, 0, 0]
+# Per-floor list of per-task completion flags. Tasks within a floor are parallel,
+# so any unfinished service point can be opened in any order.
+var task_done: Array = []
+var active_task_index := -1
 var mistakes := [0, 0, 0, 0, 0, 0, 0]
 var medal_levels := [0, 0, 0, 0, 0, 0, 0]
 var repair_challenges: Array = []
+var knowledge_cards: Dictionary = {}
 var spacious_geometry: Dictionary = {}
 var spacious_prop_layout: Dictionary = {}
 var floor_objects: Array[Sprite2D] = []
@@ -156,6 +163,11 @@ var award_icon: TextureRect
 var award_title: Label
 var award_detail: Label
 var medal_continue_button: Button
+var medal_panel: PanelContainer
+var knowledge_panel: PanelContainer
+var knowledge_card_title: Label
+var knowledge_card_summary: Label
+var knowledge_card_points: Label
 var up_stair_label: Label
 var down_stair_label: Label
 var world_camera: Camera2D
@@ -174,6 +186,10 @@ func _ready() -> void:
 	var layout_parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SPACIOUS_PROP_LAYOUT_PATH))
 	assert(layout_parsed is Dictionary)
 	spacious_prop_layout = layout_parsed
+	var cards_parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://assets/data/floor_knowledge_cards.json"))
+	if cards_parsed is Dictionary:
+		knowledge_cards = cards_parsed
+	_init_task_done()
 	_build_world()
 	_build_hud()
 	_load_floor(0)
@@ -187,7 +203,7 @@ func _ready() -> void:
 			assert(requested_parts.size() == 2, "Use floor:completed_tasks")
 			var requested_floor := clampi(requested_parts[0].to_int(), 1, 7)
 			var requested_progress := clampi(requested_parts[1].to_int(), 0, floors[requested_floor - 1].tasks.size())
-			progress[requested_floor - 1] = requested_progress
+			_set_floor_completed_count(requested_floor - 1, requested_progress)
 			_load_floor(requested_floor - 1)
 			capture_preview.call_deferred("repair_progress_floor_%02d_stage_%02d.png" % [requested_floor, requested_progress])
 			return
@@ -197,10 +213,11 @@ func _ready() -> void:
 			assert(requested_parts.size() == 2)
 			var requested_floor := clampi(requested_parts[0].to_int(), 1, 7)
 			var requested_task := clampi(requested_parts[1].to_int(), 1, floors[requested_floor - 1].tasks.size())
-			progress[requested_floor - 1] = requested_task - 1
+			_set_floor_completed_count(requested_floor - 1, requested_task - 1)
 			_load_floor(requested_floor - 1)
-			player.position = _current_spot()
-			_open_challenge()
+			var task_index := requested_task - 1
+			player.position = _vector_from_array(spacious_geometry.floors[requested_floor - 1].service[task_index])
+			_open_challenge(task_index)
 			if with_hint:
 				challenge_art_overlay.show_hint(repair_interaction.art_hint())
 			capture_preview.call_deferred("challenge_preview%s_floor_%02d_task_%02d.png" % ["_hint" if with_hint else "", requested_floor, requested_task])
@@ -232,7 +249,7 @@ func _ready() -> void:
 		if argument.begins_with("--capture-repaired-floor="):
 			var repaired_requested := clampi(argument.trim_prefix("--capture-repaired-floor=").to_int(), 1, 7)
 			var repaired_index := repaired_requested - 1
-			progress[repaired_index] = floors[repaired_index].tasks.size()
+			_set_floor_completed_count(repaired_index, floors[repaired_index].tasks.size())
 			medal_levels[repaired_index] = 2
 			_load_floor(repaired_index)
 			player.position = _current_spot()
@@ -251,8 +268,9 @@ func _ready() -> void:
 			capture_preview.call_deferred("character_action_%s.png" % action)
 			return
 	if arguments.has("--capture-challenge"):
-		player.position = _current_spot()
-		_open_challenge()
+		var capture_nearest := _nearest_open_spot()
+		player.position = capture_nearest.position
+		_open_challenge(int(capture_nearest.index))
 		capture_preview.call_deferred("challenge_preview.png")
 	elif arguments.has("--capture-map"):
 		toggle_floor_map(true)
@@ -265,12 +283,12 @@ func _ready() -> void:
 		_record_object_state(preview_prop, true)
 		capture_preview.call_deferred("dismantle_preview.png")
 	elif arguments.has("--capture-medal"):
-		progress[0] = 3
+		_set_floor_completed_count(0, 3)
 		mistakes[0] = 1
 		await _complete_floor()
 		capture_preview.call_deferred("medal_preview.png")
 	elif arguments.has("--capture-repair-transition"):
-		progress[0] = 3
+		_set_floor_completed_count(0, 3)
 		repair_transition_seconds = 1.2
 		_complete_floor()
 		await get_tree().create_timer(0.6).timeout
@@ -293,7 +311,7 @@ func _capture_repair_audit() -> void:
 	var captures := 0
 	for index in range(floors.size()):
 		for stage in range(floors[index].tasks.size() + 1):
-			progress[index] = stage
+			_set_floor_completed_count(index, stage)
 			_load_floor(index)
 			await get_tree().process_frame
 			await RenderingServer.frame_post_draw
@@ -602,34 +620,76 @@ func _build_medal_overlay(layer: CanvasLayer) -> void:
 	result_art.modulate = Color(1, 1, 1, 0.82)
 	result_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	medal_overlay.add_child(result_art)
-	var panel := PanelContainer.new()
-	panel.position = Vector2(375, 114)
-	panel.size = Vector2(786, 796)
-	panel.add_theme_stylebox_override("panel", _panel_style(Color("16273bf3"), Color("ffd57b"), 14))
-	medal_overlay.add_child(panel)
+	# Medal page.
+	medal_panel = PanelContainer.new()
+	medal_panel.position = Vector2(375, 114)
+	medal_panel.size = Vector2(786, 796)
+	medal_panel.add_theme_stylebox_override("panel", _panel_style(Color("16273bf3"), Color("ffd57b"), 14))
+	medal_overlay.add_child(medal_panel)
 	var stack := VBoxContainer.new()
 	stack.alignment = BoxContainer.ALIGNMENT_CENTER
-	stack.add_theme_constant_override("separation", 18)
-	panel.add_child(stack)
+	stack.add_theme_constant_override("separation", 16)
+	medal_panel.add_child(stack)
 	award_title = Label.new()
 	award_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	UI.display(award_title, 36)
 	award_title.add_theme_color_override("font_color", Color("ffe1a0"))
 	stack.add_child(award_title)
 	award_icon = TextureRect.new()
-	award_icon.custom_minimum_size = Vector2(360, 360)
+	award_icon.custom_minimum_size = Vector2(330, 330)
 	award_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	award_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	stack.add_child(award_icon)
 	award_detail = Label.new()
 	award_detail.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	award_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	award_detail.custom_minimum_size = Vector2(690, 96)
+	award_detail.custom_minimum_size = Vector2(690, 90)
 	UI.story(award_detail, 24)
 	stack.add_child(award_detail)
-	medal_continue_button = _make_ui_button("进入下一层", stack)
-	medal_continue_button.custom_minimum_size = Vector2(500, 68)
-	medal_continue_button.pressed.connect(_close_medal)
+	medal_continue_button = _make_ui_button("查看维修日志", stack)
+	medal_continue_button.custom_minimum_size = Vector2(500, 64)
+	medal_continue_button.pressed.connect(_show_knowledge_card)
+	var skip_medal := _make_ui_button("跳过，直接进入下一层", stack)
+	skip_medal.custom_minimum_size = Vector2(500, 48)
+	skip_medal.add_theme_font_size_override("font_size", 18)
+	skip_medal.pressed.connect(_close_medal)
+	# Knowledge card page (hidden until the player opens it).
+	knowledge_panel = PanelContainer.new()
+	knowledge_panel.position = Vector2(375, 114)
+	knowledge_panel.size = Vector2(786, 796)
+	knowledge_panel.add_theme_stylebox_override("panel", _panel_style(Color("16273bf3"), Color("ffd57b"), 14))
+	knowledge_panel.visible = false
+	medal_overlay.add_child(knowledge_panel)
+	var card_stack := VBoxContainer.new()
+	card_stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	card_stack.add_theme_constant_override("separation", 14)
+	knowledge_panel.add_child(card_stack)
+	var card_eyebrow := Label.new()
+	card_eyebrow.text = "维修日志 · 知识卡片"
+	card_eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UI.display(card_eyebrow, 24)
+	card_eyebrow.add_theme_color_override("font_color", Color("9fd6ff"))
+	card_stack.add_child(card_eyebrow)
+	knowledge_card_title = Label.new()
+	knowledge_card_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	UI.display(knowledge_card_title, 30)
+	knowledge_card_title.add_theme_color_override("font_color", Color("ffe1a0"))
+	card_stack.add_child(knowledge_card_title)
+	knowledge_card_summary = Label.new()
+	knowledge_card_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	knowledge_card_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	knowledge_card_summary.custom_minimum_size = Vector2(690, 110)
+	UI.story(knowledge_card_summary, 22)
+	card_stack.add_child(knowledge_card_summary)
+	knowledge_card_points = Label.new()
+	knowledge_card_points.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	knowledge_card_points.custom_minimum_size = Vector2(690, 300)
+	UI.story(knowledge_card_points, 21)
+	knowledge_card_points.add_theme_color_override("font_color", Color("e3edf5"))
+	card_stack.add_child(knowledge_card_points)
+	var card_continue := _make_ui_button("进入下一层", card_stack)
+	card_continue.custom_minimum_size = Vector2(500, 64)
+	card_continue.pressed.connect(_close_medal)
 
 
 func _build_floor_map_overlay(layer: CanvasLayer) -> void:
@@ -865,8 +925,47 @@ func _down_stair_point() -> Vector2:
 	return _vector_from_array(spacious_geometry.floors[floor_index].entry)
 
 
+func _init_task_done() -> void:
+	task_done.clear()
+	for floor_data in floors:
+		var flags: Array[bool] = []
+		for _index in range(floor_data.tasks.size()):
+			flags.append(false)
+		task_done.append(flags)
+
+
+func _floor_task_count(index: int) -> int:
+	return floors[index].tasks.size()
+
+
+func _is_task_done(floor: int, index: int) -> bool:
+	return bool(task_done[floor][index])
+
+
+func _floor_completed_count(index: int) -> int:
+	var count := 0
+	for flag in task_done[index]:
+		if flag:
+			count += 1
+	return count
+
+
+func _sync_progress() -> void:
+	for index in range(floors.size()):
+		progress[index] = _floor_completed_count(index)
+
+
+# Capture/debug helper: mark the first `count` tasks of a floor complete.
+func _set_floor_completed_count(floor: int, count: int) -> void:
+	var total := _floor_task_count(floor)
+	var clamped := clampi(count, 0, total)
+	for index in range(total):
+		task_done[floor][index] = index < clamped
+	progress[floor] = clamped
+
+
 func _floor_complete(index: int) -> bool:
-	return progress[index] >= floors[index].tasks.size()
+	return _floor_completed_count(index) >= _floor_task_count(index)
 
 
 func _can_ascend() -> bool:
@@ -896,12 +995,29 @@ func _update_stair_labels() -> void:
 		down_stair_label.position = _down_stair_point() + Vector2(-48, 45)
 
 
-func _current_spot() -> Vector2:
+func _nearest_open_spot() -> Dictionary:
 	var points: Array = spacious_geometry.floors[floor_index].service
-	var physical_index := mini(progress[floor_index], points.size() - 1)
-	if progress[floor_index] >= floors[floor_index].tasks.size():
+	var best_index := -1
+	var best_position := Vector2(-1000, -1000)
+	var best_distance := INF
+	var total := _floor_task_count(floor_index)
+	for index in range(mini(total, points.size())):
+		if _is_task_done(floor_index, index):
+			continue
+		var position := _vector_from_array(points[index])
+		var distance := player.position.distance_to(position)
+		if distance < best_distance:
+			best_distance = distance
+			best_index = index
+			best_position = position
+	return {"index": best_index, "position": best_position, "distance": best_distance}
+
+
+func _current_spot() -> Vector2:
+	var nearest := _nearest_open_spot()
+	if nearest.index < 0:
 		return Vector2(-1000, -1000)
-	return _vector_from_array(points[physical_index])
+	return nearest.position
 
 
 func _walkable(point: Vector2) -> bool:
@@ -1006,10 +1122,11 @@ func _process(delta: float) -> void:
 		footstep_timer = 0.0
 	_update_character_depth()
 
-	var near_repair := player.position.distance_to(_current_spot()) <= INTERACT_DISTANCE
+	var nearest := _nearest_open_spot()
+	var near_repair: bool = nearest.index >= 0 and float(nearest.distance) <= INTERACT_DISTANCE
 	var near_up := _near_up_stair()
 	var near_down := _near_down_stair()
-	var action_available := near_repair or near_down or (near_up and _can_ascend())
+	var action_available: bool = near_repair or near_down or (near_up and _can_ascend())
 	repair_button.disabled = not action_available
 	repair_button.visible = action_available
 	if near_repair:
@@ -1021,7 +1138,8 @@ func _process(delta: float) -> void:
 	elif _floor_complete(floor_index):
 		prompt_label.text = "这一层已经亮起来了，去楼梯口看看吧。"
 	else:
-		prompt_label.text = "别着急，沿着柔光找找：%s。" % floors[floor_index].tasks[progress[floor_index]]
+		var open_index := _first_open_index()
+		prompt_label.text = "别着急，沿着柔光找找：%s。" % floors[floor_index].tasks[open_index]
 	repair_button.text = "检修 [E]" if near_repair else "走楼梯 [E]"
 	_set_world_hint_visible((action_available and world_has_moved) or (world_idle_seconds >= 7.0 and not challenge_overlay.visible))
 	queue_redraw()
@@ -1278,10 +1396,12 @@ func _reset_removed_objects() -> void:
 func _try_interact() -> void:
 	if working:
 		return
-	# A service station may be close to the stair landing. The active repair
-	# takes precedence until it is complete, so E cannot change floors mid-task.
-	if player.position.distance_to(_current_spot()) <= INTERACT_DISTANCE:
-		_open_challenge()
+	# Any unfinished service point can be opened; pick the closest one. A
+	# service station may be near the stair landing, but the active repair
+	# takes precedence until finished.
+	var nearest := _nearest_open_spot()
+	if nearest.index >= 0 and float(nearest.distance) <= INTERACT_DISTANCE:
+		_open_challenge(int(nearest.index))
 		return
 	if _near_up_stair():
 		if _can_ascend():
@@ -1297,11 +1417,12 @@ func _try_interact() -> void:
 	_play_sfx("ui/ui_error.wav", -9.0)
 
 
-func _open_challenge() -> void:
+func _open_challenge(task_index: int) -> void:
+	active_task_index = task_index
 	working = true
 	repair_button.disabled = true
 	player.play(&"manual_front")
-	var challenge: Dictionary = repair_challenges[floor_index][progress[floor_index]]
+	var challenge: Dictionary = repair_challenges[floor_index][task_index]
 	var panel_path := "res://assets/ui/Floors/" + str(challenge.panel).replace("/", "/Panels/")
 	challenge_art.texture = load(panel_path)
 	var native_size := Vector2(challenge_art.texture.get_size())
@@ -1315,8 +1436,8 @@ func _open_challenge() -> void:
 	)
 	if floor_index == 6:
 		challenge_close_button.position.x -= 120.0
-	repair_interaction.configure(floor_index, progress[floor_index])
-	challenge_art_overlay.configure(floor_index, progress[floor_index], repair_interaction, native_size, challenge_art.texture)
+	repair_interaction.configure(floor_index, task_index)
+	challenge_art_overlay.configure(floor_index, task_index, repair_interaction, native_size, challenge_art.texture)
 	challenge_idle_seconds = 0.0
 	challenge_error_seconds = 0.0
 	challenge_overlay.show()
@@ -1325,7 +1446,8 @@ func _open_challenge() -> void:
 
 func _close_challenge() -> void:
 	challenge_overlay.hide()
-	challenge_art_overlay.hide_hint()
+	challenge_art_overlay.force_hide_hint()
+	active_task_index = -1
 	working = false
 	player.play(&"idle_front")
 	_play_sfx("ui/ui_cancel.wav", -9.0)
@@ -1346,7 +1468,7 @@ func _on_interaction_step() -> void:
 	player.play(&"manual_front")
 	challenge_idle_seconds = 0.0
 	challenge_error_seconds = 0.0
-	challenge_art_overlay.hide_hint()
+	challenge_art_overlay.force_hide_hint()
 	_play_sfx("ui/ui_confirm.wav", -20.0, 0.78)
 
 
@@ -1358,10 +1480,13 @@ func _complete_challenge() -> void:
 	challenge_overlay.hide()
 	player.play(&"repair_front")
 	var floor_data: Dictionary = floors[floor_index]
-	var task_index: int = progress[floor_index]
+	var task_index: int = active_task_index
 	_play_sfx(floor_data.sounds[task_index], -9.0, 0.88)
 	await get_tree().create_timer(repair_delay_seconds).timeout
-	progress[floor_index] += 1
+	var before_count := _floor_completed_count(floor_index)
+	task_done[floor_index][task_index] = true
+	progress[floor_index] = _floor_completed_count(floor_index)
+	active_task_index = -1
 	state_changed.emit(export_state())
 	if _floor_complete(floor_index):
 		await _complete_floor()
@@ -1371,7 +1496,7 @@ func _complete_challenge() -> void:
 			var reveal := create_tween()
 			reveal.tween_method(func(value: float) -> void:
 				material.set_shader_parameter("completed_stages", value),
-				float(task_index), float(progress[floor_index]), minf(0.7, repair_transition_seconds))
+				float(before_count), float(progress[floor_index]), minf(0.7, repair_transition_seconds))
 			await reveal.finished
 		working = false
 		player.play(&"idle_front")
@@ -1431,10 +1556,40 @@ func _show_medal() -> void:
 	award_title.text = "获得徽章 · " + MEDAL_NAMES[floor_index]
 	var result := "完美检修 · 发光徽章" if level == 2 else "修复完成 · 已取得徽章"
 	var detail := "本层所有操作均无失误。" if level == 2 else "本层完成修复；共修正 %d 次操作。" % mistakes[floor_index]
-	var route := "继续后直接进入下一层，也可以回头查看本层。" if floor_index < floors.size() - 1 else "主灯复明，可以返回各层查看维修成果。"
+	var route := "可以查看本层维修日志，也可以跳过直接进入下一层。" if floor_index < floors.size() - 1 else "主灯复明，可以返回各层查看维修成果。"
 	award_detail.text = result + "\n" + detail + "\n" + route
-	medal_continue_button.text = "进入下一层" if floor_index < floors.size() - 1 else "返回第七层场景"
+	_populate_knowledge_card()
+	medal_panel.visible = true
+	knowledge_panel.visible = false
 	medal_overlay.show()
+
+
+func _populate_knowledge_card() -> void:
+	var card: Dictionary = {}
+	var cards: Array = knowledge_cards.get("cards", [])
+	for entry in cards:
+		if int(entry.get("floor", -1)) == floor_index:
+			card = entry
+			break
+	if card.is_empty():
+		knowledge_card_title.text = floors[floor_index].title
+		knowledge_card_summary.text = ""
+		knowledge_card_points.text = ""
+		return
+	knowledge_card_title.text = str(card.get("title", floors[floor_index].title))
+	knowledge_card_summary.text = "今日维修：" + str(card.get("summary", ""))
+	var points: Array = card.get("points", [])
+	var lines := ""
+	for i in range(points.size()):
+		lines += "%d. %s" % [i + 1, str(points[i])]
+		if i < points.size() - 1:
+			lines += "\n\n"
+	knowledge_card_points.text = lines
+
+
+func _show_knowledge_card() -> void:
+	medal_panel.visible = false
+	knowledge_panel.visible = true
 
 
 func _close_medal() -> void:
@@ -1450,9 +1605,12 @@ func _close_medal() -> void:
 
 
 func _reset_floor() -> void:
+	for index in range(_floor_task_count(floor_index)):
+		task_done[floor_index][index] = false
 	progress[floor_index] = 0
 	mistakes[floor_index] = 0
 	medal_levels[floor_index] = 0
+	active_task_index = -1
 	object_states[floor_index].clear()
 	_load_floor(floor_index)
 	_play_sfx("ui/ui_cancel.wav", -8.0)
@@ -1460,10 +1618,17 @@ func _reset_floor() -> void:
 
 
 func export_state() -> Dictionary:
+	var done_copy: Array = []
+	for flags in task_done:
+		var typed: Array[bool] = []
+		for flag in flags:
+			typed.append(bool(flag))
+		done_copy.append(typed)
 	return {
-		"version": 1,
+		"version": 2,
 		"floor_index": floor_index,
 		"progress": progress.duplicate(),
+		"task_done": done_copy,
 		"mistakes": mistakes.duplicate(),
 		"medal_levels": medal_levels.duplicate()
 	}
@@ -1472,20 +1637,45 @@ func export_state() -> Dictionary:
 func import_state(state: Dictionary) -> void:
 	if state.is_empty():
 		return
-	for key in ["progress", "mistakes", "medal_levels"]:
+	if task_done.is_empty():
+		_init_task_done()
+	var incoming_done: Variant = state.get("task_done", [])
+	if incoming_done is Array and incoming_done.size() == floors.size():
+		task_done.clear()
+		for flags in incoming_done:
+			var typed: Array[bool] = []
+			for flag in flags:
+				typed.append(bool(flag))
+			task_done.append(typed)
+	else:
+		# v1 save: reconstruct per-task flags from per-floor completed counts.
+		var old_progress: Variant = state.get("progress", [])
+		if old_progress is Array and old_progress.size() == floors.size():
+			for floor in range(floors.size()):
+				_set_floor_completed_count(floor, int(old_progress[floor]))
+	for key in ["mistakes", "medal_levels"]:
 		var incoming: Variant = state.get(key, [])
 		if incoming is Array and incoming.size() == floors.size():
 			set(key, incoming.duplicate())
+	_sync_progress()
 	_load_floor(clampi(int(state.get("floor_index", 0)), 0, floors.size() - 1))
+
+
+func _first_open_index() -> int:
+	for index in range(_floor_task_count(floor_index)):
+		if not _is_task_done(floor_index, index):
+			return index
+	return -1
 
 
 func _update_hud() -> void:
 	var floor_data: Dictionary = floors[floor_index]
-	var current: int = progress[floor_index]
+	var current: int = _floor_completed_count(floor_index)
 	var total: int = floor_data.tasks.size()
 	title_label.text = floor_data.title
 	if current < total:
-		task_label.text = "当前任务：" + floor_data.tasks[current]
+		var next_index := _first_open_index()
+		task_label.text = "待检修（%d/%d）：%s" % [current, total, floor_data.tasks[next_index]]
 	else:
 		task_label.text = "修复完成：走到楼梯口继续探索"
 	progress_label.text = "检修进度  %d / %d　｜　徽章 %s" % [current, total, "发光" if medal_levels[floor_index] == 2 else "已取得" if medal_levels[floor_index] == 1 else "未取得"]
@@ -1520,30 +1710,63 @@ func _play_sfx(relative_path: String, volume := -5.0, pitch := 1.0) -> void:
 func _draw() -> void:
 	if floors.is_empty():
 		return
-	var floor_data: Dictionary = floors[floor_index]
-	var current: int = progress[floor_index]
 	var pulse := 1.0 + 0.12 * sin(Time.get_ticks_msec() / 180.0)
-	if current < floor_data.tasks.size():
-		var spot := _current_spot()
-		var bob := sin(Time.get_ticks_msec() / 270.0) * 3.0
-		var cursor := spot + Vector2(0, -22.0 + bob)
-		var shape := PackedVector2Array([
-			cursor + Vector2(-8, -10), cursor + Vector2(0, -5),
-			cursor + Vector2(8, -10), cursor + Vector2(5, 2),
-			cursor + Vector2(0, 11), cursor + Vector2(-5, 2)
-		])
-		var shadow := PackedVector2Array()
-		for vertex in shape:
-			shadow.append(vertex + Vector2(1, 2))
-		draw_colored_polygon(shadow, Color(0.04, 0.08, 0.10, 0.75))
-		draw_colored_polygon(shape, Color("f5cc79"))
-		var outline := PackedVector2Array(shape)
-		outline.append(shape[0])
-		draw_polyline(outline, Color("fff0bd"), 1.4, true)
+	var points: Array = spacious_geometry.floors[floor_index].service
+	var total := _floor_task_count(floor_index)
+	var nearest := _nearest_open_spot()
+	for index in range(mini(total, points.size())):
+		var at := _vector_from_array(points[index])
+		if _is_task_done(floor_index, index):
+			_draw_done_marker(at)
+		else:
+			_draw_open_marker(at, index == nearest.index, pulse)
 	if _can_ascend():
 		_draw_stair_marker(_up_stair_point(), true, true, pulse)
 	if _can_descend():
 		_draw_stair_marker(_down_stair_point(), true, false, pulse)
+
+
+func _draw_open_marker(at: Vector2, emphasized: bool, pulse: float) -> void:
+	if emphasized:
+		var radius := 26.0 * pulse
+		draw_circle(at, radius + 6.0, Color(0.05, 0.12, 0.16, 0.55))
+		draw_circle(at, radius, Color(C_READY.r, C_READY.g, C_READY.b, 0.22))
+		draw_arc(at, radius, 0, TAU, 36, Color.WHITE, 4.0)
+		draw_arc(at, radius - 3.0, 0, TAU, 36, C_READY, 2.5)
+		var bob := sin(Time.get_ticks_msec() / 270.0) * 3.0
+		_draw_guiding_arrow(at + Vector2(0, -22.0 + bob))
+	else:
+		var r := 15.0
+		draw_circle(at, r + 3.0, Color(0.05, 0.12, 0.16, 0.45))
+		draw_circle(at, r, Color(C_READY.r, C_READY.g, C_READY.b, 0.16))
+		draw_arc(at, r, 0, TAU, 30, Color(C_READY.r, C_READY.g, C_READY.b, 0.85), 2.5)
+
+
+func _draw_done_marker(at: Vector2) -> void:
+	var r := 14.0
+	draw_circle(at, r + 2.0, Color(0.05, 0.12, 0.12, 0.45))
+	draw_circle(at, r, Color(C_DONE.r, C_DONE.g, C_DONE.b, 0.18))
+	draw_arc(at, r, 0, TAU, 30, C_DONE, 2.5)
+	var a := at + Vector2(-6, 0)
+	var b := at + Vector2(-1, 6)
+	var c := at + Vector2(7, -5)
+	draw_polyline(PackedVector2Array([a, b, c]), C_DONE, 2.5, true)
+
+
+func _draw_guiding_arrow(cursor: Vector2) -> void:
+	var shape := PackedVector2Array([
+		cursor + Vector2(-8, -10), cursor + Vector2(0, -5),
+		cursor + Vector2(8, -10), cursor + Vector2(5, 2),
+		cursor + Vector2(0, 11), cursor + Vector2(-5, 2)
+	])
+	var shadow := PackedVector2Array()
+	for vertex in shape:
+		shadow.append(vertex + Vector2(1, 2))
+	draw_colored_polygon(shadow, Color(0.04, 0.08, 0.10, 0.75))
+	draw_colored_polygon(shape, Color("f5cc79"))
+	var outline := PackedVector2Array(shape)
+	outline.append(shape[0])
+	draw_polyline(outline, Color("fff0bd"), 1.4, true)
 
 
 func _draw_stair_marker(at: Vector2, active: bool, upward: bool, pulse: float) -> void:

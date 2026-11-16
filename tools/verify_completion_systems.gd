@@ -31,12 +31,12 @@ func run() -> void:
 		assert(game.partial_repair_overlay != null)
 		var partial_material := game.partial_repair_overlay.material as ShaderMaterial
 		assert(int(partial_material.get_shader_parameter("completed_stages")) == 0)
-		game.progress[floor_index] = 1
+		game._set_floor_completed_count(floor_index, 1)
 		game._load_floor(floor_index)
 		partial_material = game.partial_repair_overlay.material as ShaderMaterial
 		assert(int(partial_material.get_shader_parameter("completed_stages")) == 1)
 		assert(game.background.texture.resource_path == game.EXPANDED_ART[floor_index])
-		game.progress[floor_index] = 0
+		game._set_floor_completed_count(floor_index, 0)
 	var state: Dictionary = game.export_state()
 	assert(state.progress.size() == 7 and state.medal_levels.size() == 7)
 	game.queue_free()

@@ -10,8 +10,8 @@ signal step_completed
 # illustration remains the original floor panel; this control is its operable part.
 const TASKS := [
 	[
-		{"kind": "drag", "instruction": "按住画面中的刮刀，依次刮净四处盐霜。", "parts": ["刮刀", "刮刀", "刮刀", "刮刀"], "targets": ["左上盐霜", "右侧盐霜", "左下盐霜", "中央盐霜"]},
-		{"kind": "sequence", "interaction": "drag_sequence", "instruction": "拖动石料与工具到修复处，依次选材、清缝、轻敲、填补。", "items": ["选稳固石料", "清理接缝", "轻敲空鼓", "填补砂浆"]},
+		{"kind": "drag", "instruction": "按住画面中的刮刀，刮净四处盐霜（顺序任意）。", "parts": ["刮刀", "刮刀", "刮刀", "刮刀"], "targets": ["左上盐霜", "右侧盐霜", "左下盐霜", "中央盐霜"]},
+		{"kind": "sequence", "interaction": "drag_sequence", "instruction": "拖动石料与工具到修复处，选材、清缝、轻敲、填补，顺序任意。", "items": ["选稳固石料", "清理接缝", "轻敲空鼓", "填补砂浆"]},
 		{"kind": "align", "instruction": "调节砂浆配比与承压负载，再锁定测试。", "labels": ["砂浆配比", "承压负载"], "targets": [62, 74], "tolerance": 8}
 	],
 	[
@@ -25,14 +25,14 @@ const TASKS := [
 		{"kind": "align", "instruction": "把输出电压和负载调入绿色标定区。", "labels": ["输出电压", "回路负载"], "targets": [72, 46], "tolerance": 6}
 	],
 	[
-		{"kind": "sequence", "drag_steps": [0, 1, 2], "instruction": "移动放大镜，依次检查异物、断齿和轴承。", "items": ["异物", "断齿", "轴承"]},
-		{"kind": "drag", "instruction": "按尺寸将三只齿轮装上对应传动轴。", "parts": ["小齿轮", "中齿轮", "大齿轮"], "targets": ["左传动轴", "中传动轴", "右传动轴"]},
+		{"kind": "sequence", "drag_steps": [0, 1, 2], "instruction": "移动放大镜，检查异物、断齿和轴承，顺序任意。", "items": ["异物", "断齿", "轴承"]},
+		{"kind": "drag", "instruction": "按尺寸将三只齿轮装上对应传动轴，顺序任意。", "parts": ["小齿轮", "中齿轮", "大齿轮"], "targets": ["左传动轴", "中传动轴", "右传动轴"]},
 		{"kind": "dial", "instruction": "转动图中的调速仪表，指向左侧绿色区后锁定。", "label": "调速旋钮", "target": 270, "tolerance": 11}
 	],
 	[
-		{"kind": "drag", "instruction": "用软布依次擦拭镜面上的四处盐雾。", "parts": ["软布", "软布", "软布", "软布"], "targets": ["左上", "右上", "左下", "右下"]},
-		{"kind": "sequence", "drag_steps": [0, 1, 2], "instruction": "移动放大镜，从左到右检查镜片裂纹。", "items": ["左镜", "中镜", "右镜"]},
-		{"kind": "drag", "instruction": "从下方托盘取三片镜片，依次装入空镜位。", "parts": ["第一镜片", "第二镜片", "第三镜片"], "targets": ["入射位", "转折位", "出射位"]}
+		{"kind": "drag", "instruction": "用软布擦拭镜面上的四处盐雾，顺序任意。", "parts": ["软布", "软布", "软布", "软布"], "targets": ["左上", "右上", "左下", "右下"]},
+		{"kind": "sequence", "drag_steps": [0, 1, 2], "instruction": "移动放大镜，检查镜片裂纹，顺序任意。", "items": ["左镜", "中镜", "右镜"]},
+		{"kind": "drag", "instruction": "从下方托盘取三片镜片，装入空镜位，顺序任意。", "parts": ["第一镜片", "第二镜片", "第三镜片"], "targets": ["入射位", "转折位", "出射位"]}
 	],
 	[
 		{"kind": "align", "instruction": "移动光源的横向、纵向位置到刻线。", "labels": ["水平位置", "垂直位置"], "targets": [36, 67], "tolerance": 5},
@@ -40,10 +40,10 @@ const TASKS := [
 		{"kind": "align", "instruction": "降低温度并稳住光束，再锁定焦点。", "labels": ["工作温度", "光束稳定度"], "targets": [31, 84], "tolerance": 6}
 	],
 	[
-		{"kind": "sequence", "instruction": "依次确认七层系统的回传灯。", "items": ["地基", "排水", "电路", "机械", "镜片", "焦距", "主灯"]},
-		{"kind": "sequence", "instruction": "按手册完成短、短、长、短的闪灯校验。", "items": ["短闪 1", "短闪 2", "长闪", "短闪 3"]},
+		{"kind": "sequence", "instruction": "确认七层系统的回传灯，顺序任意。", "items": ["地基", "排水", "电路", "机械", "镜片", "焦距", "主灯"]},
+		{"kind": "sequence", "instruction": "按手册完成短、短、长、短的闪灯校验，顺序任意。", "items": ["短闪 1", "短闪 2", "长闪", "短闪 3"]},
 		{"kind": "dial", "instruction": "转动图中的方位盘，对准右上方绿色安全航道。", "label": "灯塔方位盘", "target": 45, "tolerance": 8},
-		{"kind": "sequence", "instruction": "依次合上断路器、预热、启动主灯。", "items": ["合闸", "预热", "启动"]}
+		{"kind": "sequence", "instruction": "合上断路器、预热、启动主灯，顺序任意。", "items": ["合闸", "预热", "启动"]}
 	]
 ]
 
@@ -61,6 +61,7 @@ const C_GREEN := Color("87d4ad")
 const C_RED := Color("ed9789")
 
 var config: Dictionary = {}
+var done_flags: Array[bool] = []
 var stage := 0
 var values := [0.0, 0.0]
 var angle := 0.0
@@ -70,6 +71,7 @@ var drag_position := Vector2.ZERO
 var active_slider := -1
 var hover_point := Vector2(-1000, -1000)
 var finished := false
+var mistake_streak := 0
 
 
 func _ready() -> void:
@@ -82,6 +84,10 @@ func configure(floor_number: int, task_number: int) -> void:
 	assert(floor_number >= 0 and floor_number < TASKS.size())
 	assert(task_number >= 0 and task_number < TASKS[floor_number].size())
 	config = TASKS[floor_number][task_number].duplicate(true)
+	done_flags = []
+	var total := _step_count()
+	for index in range(total):
+		done_flags.append(false)
 	stage = 0
 	values = [0.0, 0.0]
 	angle = 0.0
@@ -89,6 +95,7 @@ func configure(floor_number: int, task_number: int) -> void:
 	drag_index = -1
 	active_slider = -1
 	finished = false
+	mistake_streak = 0
 	queue_redraw()
 
 
@@ -96,16 +103,56 @@ func instruction() -> String:
 	return str(config.get("instruction", ""))
 
 
+func _kind() -> String:
+	return str(config.get("kind", ""))
+
+
+func _step_count() -> int:
+	match _kind():
+		"sequence":
+			return int(config.items.size())
+		"drag":
+			return int(config.parts.size())
+		_:
+			return 0
+
+
+func is_step_done(index: int) -> bool:
+	return index >= 0 and index < done_flags.size() and done_flags[index]
+
+
+func completed_count() -> int:
+	var count := 0
+	for flag in done_flags:
+		if flag:
+			count += 1
+	return count
+
+
+func _first_open() -> int:
+	for index in range(done_flags.size()):
+		if not done_flags[index]:
+			return index
+	return -1
+
+
+func _is_drag_sequence_item(index: int) -> bool:
+	return config.get("interaction", "") == "drag_sequence" or index in config.get("drag_steps", [])
+
+
 func current_step_text() -> String:
 	if config.is_empty() or finished:
 		return ""
-	match str(config.kind):
+	var index := _first_open()
+	if index < 0:
+		return ""
+	match _kind():
 		"sequence":
-			if config.get("interaction", "") == "drag_sequence" or stage in config.get("drag_steps", []):
-				return "下一步：拖动「%s」到画面亮起的位置" % str(config.items[stage])
-			return "下一步：点击画面中的「%s」" % str(config.items[stage])
+			if _is_drag_sequence_item(index):
+				return "下一步：拖动「%s」到画面亮起的位置" % str(config.items[index])
+			return "下一步：点击画面中的「%s」" % str(config.items[index])
 		"drag":
-			return "下一步：将「%s」拖到「%s」" % [str(config.parts[stage]), str(config.targets[stage])]
+			return "下一步：将「%s」拖到「%s」" % [str(config.parts[index]), str(config.targets[index])]
 		"align":
 			return "在画面标记处向上拖动调参；两项进入绿色区后锁定。"
 		"dial":
@@ -116,20 +163,56 @@ func current_step_text() -> String:
 func art_hint() -> String:
 	if config.is_empty() or finished:
 		return ""
-	match str(config.kind):
+	var index := _first_open()
+	match _kind():
 		"sequence":
-			if config.get("interaction", "") == "drag_sequence" or stage in config.get("drag_steps", []):
-				return "拿起「%s」，移到亮起的修复处。" % str(config.items[stage])
-			return "先看看「%s」，慢慢来。" % str(config.items[stage])
+			if index < 0:
+				return ""
+			if _is_drag_sequence_item(index):
+				return "拿起「%s」，移到亮起的修复处。" % str(config.items[index])
+			return "先看看「%s」，慢慢来。" % str(config.items[index])
 		"drag":
-			var part := str(config.parts[stage])
-			var target := str(config.targets[stage])
+			if index < 0:
+				return ""
+			var part := str(config.parts[index])
+			var target := str(config.targets[index])
 			if part in ["刮刀", "软布"]:
 				return "慢慢来，用「%s」清理「%s」。" % [part, target]
 			return "试试把「%s」放到「%s」。" % [part, target]
-		"align": return "慢慢调，让两处刻度亮起绿色。"
-		"dial": return "轻轻转，等指针停在绿色区。"
+		"align":
+			return "慢慢调，让两处刻度亮起绿色。"
+		"dial":
+			return "轻轻转，等指针停在绿色区。"
 	return ""
+
+
+# 主动求助：返回当前未完成步骤的明确指引。
+func help_hint() -> String:
+	if config.is_empty() or finished:
+		return ""
+	var index := _first_open()
+	match _kind():
+		"sequence":
+			if index < 0:
+				return ""
+			if _is_drag_sequence_item(index):
+				return "按住「%s」，拖到画面里画圈的部位再松开。" % str(config.items[index])
+			return "点击画面中亮起的「%s」就可以。" % str(config.items[index])
+		"drag":
+			if index < 0:
+				return ""
+			return "按住「%s」，拖到亮起的「%s」再松开。" % [str(config.parts[index]), str(config.targets[index])]
+		"align":
+			return "在两个圆点上按住向上拖，让它们都进入绿色区，再按锁定。"
+		"dial":
+			return "按住转盘转到绿色区，再按锁定 / 测试。"
+	return ""
+
+
+func _emit_mistake(levels: Array) -> void:
+	mistake_streak += 1
+	var level := clampi(mistake_streak - 1, 0, levels.size() - 1)
+	mistake.emit(str(levels[level]))
 
 
 func _draw() -> void:
@@ -140,7 +223,7 @@ func _draw() -> void:
 		draw_circle(rivet, 3, C_GOLD)
 	if config.is_empty():
 		return
-	match str(config.kind):
+	match _kind():
 		"sequence": _draw_sequence()
 		"drag": _draw_drag()
 		"align": _draw_align()
@@ -152,8 +235,9 @@ func _draw_sequence() -> void:
 	_text(Vector2(20, 39), "逐项检查  %d / %d" % [stage, items.size()], C_GOLD, 20)
 	for index in range(items.size()):
 		var rect := _sequence_rect(index)
-		var color := C_GREEN if index < stage else (C_GOLD if index == stage else C_BLUE)
-		_draw_tile(rect, color, index == stage)
+		var done := is_step_done(index)
+		var color := C_GREEN if done else C_GOLD
+		_draw_tile(rect, color, not done)
 		_text(rect.position + Vector2(12, 32), str(items[index]), Color.WHITE, 18)
 		_text(rect.position + Vector2(6, -6), "%d" % (index + 1), color, 16)
 
@@ -166,8 +250,8 @@ func _draw_drag() -> void:
 	for index in range(parts.size()):
 		var source := _source_rect(index)
 		var target := _target_rect(index)
-		var done := index < stage
-		_draw_tile(source, C_GREEN if done else (C_GOLD if index == stage else C_BLUE), index == stage)
+		var done := is_step_done(index)
+		_draw_tile(source, C_GREEN if done else C_GOLD, not done)
 		_text(source.position + Vector2(11, 28), str(parts[index]), Color.WHITE, 17)
 		_draw_tile(target, C_GREEN if done else C_BLUE, false)
 		_text(target.position + Vector2(11, 28), str(config.targets[index]), Color.WHITE, 17)
@@ -256,17 +340,21 @@ func _gui_input(event: InputEvent) -> void:
 		return
 	var point: Vector2 = event.position
 	if event.pressed:
-		match str(config.kind):
+		match _kind():
 			"sequence":
 				for index in range(config.items.size()):
-					if _sequence_rect(index).has_point(point):
-						_press_sequence(index)
+					if not is_step_done(index) and _sequence_rect(index).has_point(point):
+						dragging = true
+						drag_index = index
+						drag_position = point
 						break
 			"drag":
-				if stage < config.parts.size() and _source_rect(stage).has_point(point):
-					dragging = true
-					drag_index = stage
-					drag_position = point
+				for index in range(config.parts.size()):
+					if not is_step_done(index) and _source_rect(index).has_point(point):
+						dragging = true
+						drag_index = index
+						drag_position = point
+						break
 			"align":
 				if LOCK_RECT.has_point(point):
 					_lock()
@@ -284,8 +372,8 @@ func _gui_input(event: InputEvent) -> void:
 					dragging = true
 					_update_pointer(point)
 	else:
-		if dragging and str(config.kind) == "drag":
-			_drop_drag(point)
+		if dragging and _kind() == "drag" and drag_index >= 0:
+			_drop_drag(drag_index, point)
 		dragging = false
 		drag_index = -1
 		active_slider = -1
@@ -293,8 +381,9 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _update_pointer(point: Vector2) -> void:
-	match str(config.kind):
-		"drag": drag_position = point
+	match _kind():
+		"drag":
+			drag_position = point
 		"align":
 			if active_slider >= 0:
 				values[active_slider] = clampf((point.x - TRACK_LEFT) / (TRACK_RIGHT - TRACK_LEFT) * 100.0, 0.0, 100.0)
@@ -303,58 +392,78 @@ func _update_pointer(point: Vector2) -> void:
 	queue_redraw()
 
 
-func _press_sequence(index: int) -> void:
-	if index < stage:
+func _complete_step(index: int) -> void:
+	if finished or is_step_done(index):
 		return
-	if index != stage:
-		mistake.emit("顺序不对；请先检查「%s」。" % str(config.items[stage]))
-		return
-	stage += 1
+	done_flags[index] = true
+	stage = completed_count()
+	mistake_streak = 0
 	queue_redraw()
-	if stage == config.items.size():
+	if stage == _step_count():
 		_finish()
 	else:
 		step_completed.emit()
 
 
-func _drop_drag(point: Vector2) -> void:
-	if drag_index != stage:
+func _drop_drag(index: int, point: Vector2) -> void:
+	if is_step_done(index):
 		return
-	if not _target_rect(stage).grow(9).has_point(point):
-		fail_art_drop()
+	if not _target_rect(index).grow(9).has_point(point):
+		_fail_drop(index)
 		return
-	drop_art_part()
+	_complete_step(index)
 
 
 func press_art_sequence(index: int) -> void:
-	if not finished and str(config.get("kind", "")) == "sequence":
-		_press_sequence(index)
+	if not finished and _kind() == "sequence":
+		_complete_step(index)
 
 
-func drop_art_part() -> void:
-	if finished or str(config.get("kind", "")) != "drag":
+func drop_art_part(index: int) -> void:
+	if not finished and _kind() == "drag":
+		_complete_step(index)
+
+
+func fail_art_drop(index: int = -1) -> void:
+	if finished or _kind() != "drag":
 		return
-	stage += 1
-	queue_redraw()
-	if stage == config.parts.size():
-		_finish()
-	else:
-		step_completed.emit()
+	_fail_drop(index)
 
 
-func fail_art_drop() -> void:
-	if not finished and str(config.get("kind", "")) == "drag":
-		mistake.emit("安装位不匹配；把「%s」放到「%s」。" % [str(config.parts[stage]), str(config.targets[stage])])
+func _fail_drop(index: int) -> void:
+	var target_index := index
+	if target_index < 0:
+		target_index = _first_open()
+	if target_index < 0:
+		return
+	var part := str(config.parts[target_index])
+	var target := str(config.targets[target_index])
+	_emit_mistake([
+		"再看看，「%s」还没放对位置。" % part,
+		"把「%s」移到亮起的「%s」附近。" % [part, target],
+		"按住「%s」，拖到画圈的「%s」再松开。" % [part, target]
+	])
+
+
+func fail_sequence_drop(index: int) -> void:
+	if finished or _kind() != "sequence":
+		return
+	var name := str(config.items[index])
+	_emit_mistake([
+		"工具还没到要处理的部位。",
+		"把「%s」移到画面亮起的位置。" % name,
+		"按住「%s」，拖到画圈的部位再松开。" % name
+	])
 
 
 func set_art_angle(new_angle: float) -> void:
-	if not finished and str(config.get("kind", "")) == "dial":
+	if not finished and _kind() == "dial":
 		angle = fposmod(new_angle, 360.0)
 		queue_redraw()
 
 
 func set_art_value(index: int, new_value: float) -> void:
-	if not finished and str(config.get("kind", "")) == "align" and index >= 0 and index < 2:
+	if not finished and _kind() == "align" and index >= 0 and index < 2:
 		values[index] = clampf(new_value, 0.0, 100.0)
 		queue_redraw()
 
@@ -362,7 +471,7 @@ func set_art_value(index: int, new_value: float) -> void:
 func try_finish_from_art() -> void:
 	if finished:
 		return
-	match str(config.get("kind", "")):
+	match _kind():
 		"align":
 			for index in range(2):
 				if absf(values[index] - float(config.targets[index])) > float(config.tolerance):
@@ -375,17 +484,28 @@ func try_finish_from_art() -> void:
 
 
 func _lock() -> void:
-	if str(config.kind) == "align":
+	if _kind() == "align":
 		for index in range(2):
 			if absf(values[index] - float(config.targets[index])) > float(config.tolerance):
-				mistake.emit("「%s」尚未进入绿色安全区。" % str(config.labels[index]))
+				var label := str(config.labels[index])
+				_emit_mistake([
+					"「%s」还没进入绿色安全区。" % label,
+					"在「%s」的圆点上按住向上拖，让它进入绿区。" % label,
+					"慢慢拖「%s」，直到绿色弧线亮起再松手。" % label
+				])
 				return
-	elif str(config.kind) == "dial":
+		_finish()
+	elif _kind() == "dial":
 		var difference := absf(wrapf(angle - float(config.target) + 180.0, 0.0, 360.0) - 180.0)
 		if difference > float(config.tolerance):
-			mistake.emit("「%s」尚未对准绿色刻线。" % str(config.label))
+			var label := str(config.label)
+			_emit_mistake([
+				"「%s」还没对准绿色刻线。" % label,
+				"按住转盘，转到绿色圆点处。" ,
+				"慢慢转，等指针停进绿色区再按锁定。"
+			])
 			return
-	_finish()
+		_finish()
 
 
 func _finish() -> void:

@@ -71,7 +71,7 @@ func run() -> void:
 		assert(task_total >= 3)
 		assert(game.repair_challenges[floor_index].size() == task_total)
 		for task_index in range(task_total):
-			game.player.position = game._current_spot()
+			game.player.position = game._vector_from_array(game.spacious_geometry.floors[floor_index].service[task_index])
 			assert(game._walkable(game.player.position), "Service foot point outside floor %d task %d: %s" % [floor_index + 1, task_index + 1, game.player.position])
 			game._try_interact()
 			assert(game.challenge_overlay.visible, "Interaction missed floor %d task %d at %s" % [floor_index + 1, task_index + 1, game.player.position])

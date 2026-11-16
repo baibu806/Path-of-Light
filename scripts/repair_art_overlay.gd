@@ -7,7 +7,7 @@ const EXTRA_TOOL_ATLAS := preload("res://assets/ui/interaction_tool_cutouts_extr
 const FOUNDATION_REPAIRED := preload("res://assets/ui/Floors/Floor01_Foundation/Panels/foundation_inspection_repaired_v1.png")
 
 # Coordinates are in each panel's native pixels. The painted control is the
-# hit target; instructions appear only after the player pauses.
+# hit target; instructions appear after the player pauses or asks for help.
 const LAYOUTS := [
 	[
 		{"source": [77, 625], "points": [[160, 210], [555, 270], [150, 445], [345, 375]]},
@@ -60,13 +60,19 @@ const LIGHTHOUSE_HINT_RECTS := [
 	Rect2(101, 412, 445, 61)
 ]
 
+# On-screen help (light bulb) button, fixed to the upper-left of the panel.
+const HELP_POS := Vector2(54, 54)
+const HELP_RADIUS := 30.0
+
 var interaction: Control
 var layout: Dictionary = {}
 var image_size := Vector2(724, 724)
 var held_source := false
 var held_sequence := false
+var held_index := -1
 var scraping := false
 var scrape_time := 0.0
+var scrape_target_index := -1
 var held_dial := false
 var active_parameter := -1
 var parameter_start := Vector2.ZERO
@@ -74,6 +80,8 @@ var parameter_base := 0.0
 var hint_text := ""
 var hint_is_error := false
 var hint_on_parchment := false
+# "idle" = 闲置自动提醒；"error" = 操作失误提示；"help" = 玩家主动求助（需保持显示）
+var hint_mode := ""
 var message_rect_native := Rect2()
 var pointer := Vector2.ZERO
 var panel_texture: Texture2D
@@ -95,11 +103,15 @@ func configure(floor_number: int, task_number: int, target_interaction: Control,
 	task_id = task_number
 	held_source = false
 	held_sequence = false
+	held_index = -1
 	scraping = false
 	scrape_time = 0.0
+	scrape_target_index = -1
 	held_dial = false
 	active_parameter = -1
 	hint_text = ""
+	hint_is_error = false
+	hint_mode = ""
 	hint_on_parchment = floor_number == 6
 	if floor_number == 0:
 		message_rect_native = Rect2(111, 582, 502, 78)
@@ -119,19 +131,42 @@ func _process(delta: float) -> void:
 	queue_redraw()
 	if scrape_time >= 0.42:
 		scraping = false
-		interaction.drop_art_part()
+		interaction.drop_art_part(scrape_target_index)
 
 
 func show_hint(message: String, is_error: bool = false) -> void:
 	hint_text = message
 	hint_is_error = is_error
+	hint_mode = "error" if is_error else "idle"
 	queue_redraw()
 
 
+# 玩家点击灯泡主动求助：明确的操作指引，保持显示直到本步骤完成或面板关闭。
+func show_help_hint(message: String) -> void:
+	hint_text = message
+	hint_is_error = false
+	hint_mode = "help"
+	queue_redraw()
+
+
+# 普通隐藏：玩家继续操作时，闲置提醒与失误提示消失；主动求助保持显示。
 func hide_hint() -> void:
+	if hint_text.is_empty() or hint_mode == "help":
+		return
+	_clear_hint()
+
+
+# 强制隐藏：步骤完成或面板关闭时使用，主动求助也一并清除。
+func force_hide_hint() -> void:
 	if hint_text.is_empty():
 		return
+	_clear_hint()
+
+
+func _clear_hint() -> void:
 	hint_text = ""
+	hint_is_error = false
+	hint_mode = ""
 	queue_redraw()
 
 
@@ -153,35 +188,49 @@ func source_point(index: int) -> Vector2:
 	return _panel_point(layout.sources[index])
 
 
+func _is_draggable(index: int) -> bool:
+	return layout.has("sequence_sources") and layout.sequence_sources[index] != null
+
+
+func _single_tool() -> bool:
+	return layout.has("source")
+
+
 func _draw() -> void:
 	if interaction == null or layout.is_empty():
 		return
 	var kind := str(interaction.config.kind)
-	var stage_now: int = interaction.stage
 	var points: Array = layout.points
-	_draw_physical_state(stage_now)
+	_draw_physical_state()
 	if floor_id == 3 and task_id == 1:
-		_draw_gear_installation_state(stage_now)
+		_draw_gear_installation_state()
 	if floor_id == 4 and task_id == 2:
-		_draw_lens_installation_state(stage_now)
+		_draw_lens_installation_state()
 	if floor_id == 0 and task_id == 0:
-		for repaired_index in range(mini(stage_now, points.size())):
-			_draw_repaired_foundation_region(repaired_index)
+		for repaired_index in range(points.size()):
+			if interaction.is_step_done(repaired_index):
+				_draw_repaired_foundation_region(repaired_index)
 	if floor_id == 0 and task_id == 1:
-		_draw_sequence_material_changes(stage_now)
+		_draw_sequence_material_changes(interaction.completed_count())
+
+	# Target hotspots: every unfinished step is operable.
 	for index in range(points.size()):
-		var draggable := layout.has("sequence_sources") and layout.sequence_sources[index] != null
-		var place := _panel_point(layout.sequence_sources[index]) if draggable else hotspot(index)
-		var done := index < stage_now and kind in ["sequence", "drag"]
-		var ready := index == stage_now or kind in ["align", "dial"]
-		if done:
+		var done: bool = interaction.is_step_done(index)
+		if kind in ["sequence", "drag"]:
+			if done:
+				continue
+		var ready := kind in ["align", "dial"] or not done
+		if not ready:
 			continue
-		if not done and not ready:
-			continue
-		var color := C_DONE if done else C_READY
-		var radius := 31.0 if ready else 20.0
+		var place: Vector2
+		if kind == "sequence" and _is_draggable(index):
+			place = _panel_point(layout.sequence_targets[index])
+		else:
+			place = hotspot(index)
+		var color := C_READY
+		var radius := 31.0
 		draw_circle(place, radius + 5.0, Color(0.02, 0.08, 0.12, 0.62))
-		draw_circle(place, radius, Color(color.r, color.g, color.b, 0.23 if ready else 0.13))
+		draw_circle(place, radius, Color(color.r, color.g, color.b, 0.23))
 		draw_arc(place, radius, 0, TAU, 40, Color.WHITE, 5.0)
 		draw_arc(place, radius - 3.0, 0, TAU, 40, color, 3.0)
 		if kind in ["sequence", "drag"]:
@@ -189,23 +238,42 @@ func _draw() -> void:
 		elif kind == "align":
 			_draw_align_marker(place, index)
 			draw_string(UI_FONT, place + Vector2(-6, 7), str(index + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 19, Color.WHITE)
-		if draggable and layout.has("sequence_targets") and ready:
-			var destination := _panel_point(layout.sequence_targets[index])
-			draw_arc(destination, 40 * _scale(), 0, TAU, 32, C_READY, 4)
-	if kind == "drag" and stage_now < points.size():
-		var source := source_point(stage_now)
-		draw_circle(source, 34, Color(0.02, 0.08, 0.12, 0.68))
-		if floor_id == 0 and task_id == 0:
-			_draw_scraper(source)
-		draw_arc(source, 31, 0, TAU, 36, Color.WHITE, 5)
-		draw_arc(source, 27, 0, TAU, 36, C_WAIT, 3)
-		draw_circle(source, 6, C_WAIT)
-		if held_source:
-			_draw_dragged_art(stage_now, pointer)
-		if scraping:
-			_draw_scrape_action(hotspot(stage_now), scrape_time / 0.42)
-	if held_sequence and stage_now < layout.sequence_sources.size():
-		_draw_sequence_tool(stage_now, pointer)
+
+	# Draggable sources.
+	if kind == "drag":
+		if _single_tool():
+			# One shared tool (scraper / cloth); draw its single grab ring.
+			var source := source_point(0)
+			draw_circle(source, 34, Color(0.02, 0.08, 0.12, 0.68))
+			if floor_id == 0 and task_id == 0:
+				_draw_scraper(source)
+			draw_arc(source, 31, 0, TAU, 36, Color.WHITE, 5)
+			draw_arc(source, 27, 0, TAU, 36, C_WAIT, 3)
+			draw_circle(source, 6, C_WAIT)
+			if held_source:
+				_draw_dragged_art(0, pointer)
+			if scraping:
+				_draw_scrape_action(hotspot(scrape_target_index), scrape_time / 0.42)
+		else:
+			for index in range(points.size()):
+				if interaction.is_step_done(index):
+					continue
+				var source := source_point(index)
+				draw_circle(source, 34, Color(0.02, 0.08, 0.12, 0.68))
+				draw_arc(source, 31, 0, TAU, 36, Color.WHITE, 5)
+				draw_arc(source, 27, 0, TAU, 36, C_WAIT, 3)
+				draw_circle(source, 6, C_WAIT)
+				if held_source and held_index == index:
+					_draw_dragged_art(index, pointer)
+	if kind == "sequence":
+		for index in range(points.size()):
+			if not _is_draggable(index) or interaction.is_step_done(index):
+				continue
+			var source := _panel_point(layout.sequence_sources[index])
+			draw_arc(source, 31 * _scale(), 0, TAU, 36, Color.WHITE, 5)
+			draw_arc(source, 27 * _scale(), 0, TAU, 36, C_WAIT, 3)
+			if held_sequence and held_index == index:
+				_draw_sequence_tool(index, pointer)
 	# Completion is communicated by the repaired apparatus, never by a checkmark.
 	if kind == "dial" and layout.has("dial_center"):
 		var center := _panel_point(layout.dial_center)
@@ -213,6 +281,7 @@ func _draw() -> void:
 		var end := center + Vector2(cos(radians), sin(radians)) * 44.0
 		draw_line(center, end, C_READY, 4)
 		draw_circle(end, 7, C_READY)
+	_draw_help_button()
 	if not hint_text.is_empty():
 		_draw_hint()
 
@@ -291,58 +360,65 @@ func _draw_native_beam(start: Vector2, finish: Vector2, strength := 1.0) -> void
 	draw_line(a, b, Color(1.0, 0.91, 0.62, 0.85 * strength), 3.0 * _scale())
 
 
-func _draw_physical_state(completed: int) -> void:
+func _draw_physical_state() -> void:
 	# The source paintings are flat. Cover only the parts that are not yet
 	# functional, then let the original painted hardware reappear step by step.
 	match floor_id:
 		1:
 			if task_id == 0:
 				var leaks := [Vector2(625, 315), Vector2(430, 325), Vector2(245, 325)]
-				for index in range(mini(completed, leaks.size())):
-					_native_box(leaks[index], Vector2(57, 26), Color("253c48"))
+				for index in range(leaks.size()):
+					if interaction.is_step_done(index):
+						_native_box(leaks[index], Vector2(57, 26), Color("253c48"))
 			elif task_id == 1:
 				var pipe_gaps := [Vector2(435, 215), Vector2(425, 340), Vector2(490, 545)]
 				var pipe_sizes := [Vector2(111, 56), Vector2(100, 92), Vector2(113, 62)]
-				for index in range(completed, 3):
-					_native_box(pipe_gaps[index], pipe_sizes[index], Color("102231"))
-				for index in range(mini(completed, 3)):
-					_native_box(Vector2(245, 235 + index * 110), Vector2(108, 90), Color("142a3c"))
+				for index in range(3):
+					if not interaction.is_step_done(index):
+						_native_box(pipe_gaps[index], pipe_sizes[index], Color("102231"))
+					else:
+						_native_box(Vector2(245, 235 + index * 110), Vector2(108, 90), Color("142a3c"))
 			elif task_id == 2:
 				_draw_gauge_state(Vector2(600, 245), float(interaction.values[1]), 68.0)
 		2:
 			if task_id == 0:
-				for index in range(1, mini(completed + 1, 3)):
-					_native_box(Vector2(layout.points[index][0], layout.points[index][1]), Vector2(44, 38), Color("293947"))
+				var boxes := [Vector2(270, 285), Vector2(355, 325), Vector2(445, 395)]
+				for index in range(1, 3):
+					if interaction.is_step_done(index):
+						_native_box(boxes[index], Vector2(44, 38), Color("293947"))
 			elif task_id == 1:
 				var electrical_parts := [Vector2(440, 265), Vector2(450, 350), Vector2(365, 435)]
-				for index in range(completed, 3):
-					_native_box(electrical_parts[index], Vector2(62, 88), Color("112638"))
-				for index in range(mini(completed, 3)):
-					var source := source_point(index)
-					draw_circle(source, 36.0 * _scale(), Color("102333"))
+				for index in range(3):
+					if not interaction.is_step_done(index):
+						_native_box(electrical_parts[index], Vector2(62, 88), Color("112638"))
+					else:
+						draw_circle(source_point(index), 36.0 * _scale(), Color("102333"))
 			elif task_id == 2:
 				_draw_gauge_state(Vector2(380, 260), float(interaction.values[0]), 72.0)
 		3:
 			if task_id == 0:
-				for index in range(mini(completed, 3)):
-					var place := hotspot(index)
-					draw_circle(place, 30.0 * _scale(), Color("36494f"))
+				for index in range(3):
+					if interaction.is_step_done(index):
+						var place := hotspot(index)
+						draw_circle(place, 30.0 * _scale(), Color("36494f"))
 			elif task_id == 2:
 				_draw_gauge_state(Vector2(395, 505), interaction.angle / 3.6, 75.0)
 		4:
 			if task_id == 0:
-				for index in range(mini(completed, 4)):
-					var place := hotspot(index)
-					draw_circle(place, 48.0 * _scale(), Color(0.48, 0.70, 0.80, 0.75))
-					draw_arc(place, 40.0 * _scale(), -2.2, 0.6, 24, Color("e3f8ff"), 3.0 * _scale())
+				for index in range(4):
+					if interaction.is_step_done(index):
+						var place := hotspot(index)
+						draw_circle(place, 48.0 * _scale(), Color(0.48, 0.70, 0.80, 0.75))
+						draw_arc(place, 40.0 * _scale(), -2.2, 0.6, 24, Color("e3f8ff"), 3.0 * _scale())
 			elif task_id == 1:
-				for index in range(mini(completed, 3)):
-					var place := hotspot(index)
-					draw_line(place + Vector2(-21, 19) * _scale(), place + Vector2(18, -19) * _scale(), Color("9ed8eb"), 3.0 * _scale())
+				for index in range(3):
+					if interaction.is_step_done(index):
+						var place := hotspot(index)
+						draw_line(place + Vector2(-21, 19) * _scale(), place + Vector2(18, -19) * _scale(), Color("9ed8eb"), 3.0 * _scale())
 		5:
-			_draw_focus_state(completed)
+			_draw_focus_state()
 		6:
-			_draw_lighthouse_state(completed)
+			_draw_lighthouse_state()
 
 
 func _draw_gauge_state(center_native: Vector2, value: float, target: float) -> void:
@@ -354,7 +430,7 @@ func _draw_gauge_state(center_native: Vector2, value: float, target: float) -> v
 	draw_circle(center, 5.0 * _scale(), Color("dcaa60"))
 
 
-func _draw_focus_state(_completed: int) -> void:
+func _draw_focus_state() -> void:
 	if task_id == 0:
 		_native_box(Vector2(365, 267), Vector2(380, 18), Color("182939"))
 		var horizontal := float(interaction.values[0])
@@ -369,33 +445,34 @@ func _draw_focus_state(_completed: int) -> void:
 		_draw_gauge_state(Vector2(600, 385), float(interaction.values[0]), 31.0)
 
 
-func _draw_lighthouse_state(completed: int) -> void:
+func _draw_lighthouse_state() -> void:
 	if task_id == 0:
 		for index in range(7):
 			var place := hotspot(index)
 			draw_circle(place, 11.0 * _scale(), Color("252f33"))
-			if index < completed:
+			if interaction.is_step_done(index):
 				draw_circle(place, 7.0 * _scale(), Color("f6d272"))
 	elif task_id == 1:
 		var lamp := _panel_point([300, 205])
+		var completed: int = interaction.completed_count()
 		draw_circle(lamp, (16.0 + completed * 6.0) * _scale(), Color(1.0, 0.75, 0.33, 0.11 + completed * 0.06))
 	elif task_id == 2:
 		_draw_gauge_state(Vector2(325, 250), interaction.angle / 3.6, 12.5)
 	else:
 		for index in range(3):
 			var place := hotspot(index)
-			draw_circle(place, 19.0 * _scale(), Color("192e37") if index >= completed else Color("f6c873"))
+			if interaction.is_step_done(index):
+				draw_circle(place, 19.0 * _scale(), Color("f6c873"))
+			else:
+				draw_circle(place, 19.0 * _scale(), Color("192e37"))
 
 
-func _draw_gear_installation_state(completed: int) -> void:
+func _draw_gear_installation_state() -> void:
 	var gear_names := ["小齿轮", "中齿轮", "大齿轮"]
-	var cover_sides := [84.0, 105.0, 125.0]
 	var placed_sides := [104.0, 126.0, 160.0]
-	for index in range(mini(completed, 3)):
-		var source := source_point(index)
-		var cover_side: float = cover_sides[index] * _scale()
-		var cover := Rect2(source - Vector2.ONE * cover_side * 0.5, Vector2.ONE * cover_side)
-		draw_rect(cover, Color("132639"), true)
+	for index in range(3):
+		if not interaction.is_step_done(index):
+			continue
 		var destination := hotspot(index)
 		_draw_tool_cutout(gear_names[index], destination, 1.0, placed_sides[index])
 		# The lower shaft and the installed gear now read as one mechanism.
@@ -403,19 +480,19 @@ func _draw_gear_installation_state(completed: int) -> void:
 		draw_circle(destination, 4.0 * _scale(), Color("f3c77b"))
 
 
-func _draw_lens_installation_state(completed: int) -> void:
+func _draw_lens_installation_state() -> void:
 	var lens_widths := [45.0, 32.0, 54.0]
 	var lens_height := 150.0
 	var dark_stone := Color("102333")
 	for index in range(3):
 		var destination := hotspot(index)
-		if index >= completed:
+		if not interaction.is_step_done(index):
 			var half_width: float = lens_widths[index] * _scale() * 0.5
 			var half_height := lens_height * _scale() * 0.5
-			var cavity := Rect2(destination - Vector2(half_width, half_height), Vector2(half_width * 2.0, half_height * 2.0))
+			var cavity := Rect2(destination - Vector2(half_width, half_height), Vector2(half_width * 2.0, half_height))
 			draw_rect(cavity, dark_stone, true)
 			draw_line(destination + Vector2(-half_width, -half_height), destination + Vector2(-half_width, half_height), Color("7f5b27"), 3.0 * _scale())
-			draw_line(destination + Vector2(half_width, -half_height), destination + Vector2(half_width, half_height), Color("a87730"), 3.0 * _scale())
+			draw_line(destination + Vector2(half_width, -half_height), destination + Vector2(half_width, half_height), Color("a87739"), 3.0 * _scale())
 		else:
 			var tray := source_point(index)
 			var tray_cover := Rect2(tray - Vector2(21, 51) * _scale(), Vector2(42, 102) * _scale())
@@ -424,7 +501,7 @@ func _draw_lens_installation_state(completed: int) -> void:
 	var beam_start := _panel_point([145, 300]).x
 	var beam_end := _panel_point([650, 300]).x
 	draw_line(Vector2(beam_start, beam_y), Vector2(beam_end, beam_y), Color("102333"), 10.0 * _scale())
-	var reached: float = [175.0, 340.0, 510.0, 650.0][clampi(completed, 0, 3)]
+	var reached: float = [175.0, 340.0, 510.0, 650.0][clampi(interaction.completed_count(), 0, 3)]
 	var light_end := _panel_point([reached, 300.0]).x
 	draw_line(Vector2(beam_start, beam_y), Vector2(light_end, beam_y), Color("f9ce72"), 5.0 * _scale())
 	draw_line(Vector2(beam_start, beam_y), Vector2(light_end, beam_y), Color("fff4bd"), 2.0 * _scale())
@@ -462,7 +539,7 @@ func _draw_repaired_foundation_region(index: int) -> void:
 		var clear := Color(1, 1, 1, 0)
 		draw_primitive(PackedVector2Array([screen_center, screen_center + inner_a * scale_factor, screen_center + inner_b * scale_factor]), PackedColorArray([white, white, white]), PackedVector2Array([sample_center / texture_size, (sample_center + inner_a * texture_scale) / texture_size, (sample_center + inner_b * texture_scale) / texture_size]), FOUNDATION_REPAIRED)
 		draw_primitive(PackedVector2Array([screen_center + inner_a * scale_factor, screen_center + outer_a * scale_factor, screen_center + inner_b * scale_factor]), PackedColorArray([white, clear, white]), PackedVector2Array([(sample_center + inner_a * texture_scale) / texture_size, (sample_center + outer_a * texture_scale) / texture_size, (sample_center + inner_b * texture_scale) / texture_size]), FOUNDATION_REPAIRED)
-		draw_primitive(PackedVector2Array([screen_center + inner_b * scale_factor, screen_center + outer_a * scale_factor, screen_center + outer_b * scale_factor]), PackedColorArray([white, clear, clear]), PackedVector2Array([(sample_center + inner_b * texture_scale) / texture_size, (sample_center + outer_a * texture_scale) / texture_size, (sample_center + outer_b * texture_scale) / texture_size]), FOUNDATION_REPAIRED)
+		draw_primitive(PackedVector2Array([screen_center + inner_b * scale_factor, screen_center + outer_a * scale_factor, screen_center + outer_b * scale_factor]), PackedColorArray([white, clear, clear]), PackedVector2Array([(sample_center + inner_b * texture_scale) / texture_size, (sample_center + outer_a * texture_scale) / texture_size, (sample_center + inner_b * texture_scale) / texture_size]), FOUNDATION_REPAIRED)
 
 
 func _draw_dragged_art(index: int, at: Vector2) -> void:
@@ -520,6 +597,19 @@ func _draw_align_marker(place: Vector2, index: int) -> void:
 		draw_arc(place, 25.0, 0, TAU, 32, C_DONE, 3.0)
 
 
+func _draw_help_button() -> void:
+	# Soft backing disc, brass ring, then a simple light-bulb glyph.
+	draw_circle(HELP_POS, HELP_RADIUS + 4.0, Color(0.02, 0.08, 0.12, 0.7))
+	draw_circle(HELP_POS, HELP_RADIUS, Color("2a3b46"))
+	draw_arc(HELP_POS, HELP_RADIUS, 0, TAU, 40, C_WAIT, 4.0)
+	draw_arc(HELP_POS, HELP_RADIUS - 5.0, 0, TAU, 40, Color("ffe1a0"), 2.0)
+	var bulb_color := Color("ffe9b0")
+	draw_arc(HELP_POS + Vector2(0, -4), 11.0, PI, TAU, 20, bulb_color, 3.0)
+	draw_rect(Rect2(HELP_POS + Vector2(-5, 6), Vector2(10, 5)), bulb_color)
+	draw_line(HELP_POS + Vector2(-6, 15), HELP_POS + Vector2(6, 15), bulb_color, 2.5)
+	draw_string(UI_FONT, HELP_POS + Vector2(26, 8), "提示", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color("ffe1a0"))
+
+
 func _draw_hint() -> void:
 	var origin := (size - image_size * _scale()) * 0.5
 	var rect := Rect2(origin + message_rect_native.position * _scale(), message_rect_native.size * _scale())
@@ -544,10 +634,7 @@ func _gui_input(event: InputEvent) -> void:
 	if kind not in ["sequence", "drag", "align", "dial"]:
 		return
 	if event is InputEventMouseMotion:
-		if held_source:
-			pointer = event.position
-			queue_redraw()
-		if held_sequence:
+		if held_source or held_sequence:
 			pointer = event.position
 			queue_redraw()
 		if held_dial:
@@ -558,6 +645,9 @@ func _gui_input(event: InputEvent) -> void:
 	if not event is InputEventMouseButton or event.button_index != MOUSE_BUTTON_LEFT:
 		return
 	if event.pressed:
+		if event.position.distance_to(HELP_POS) <= HELP_RADIUS + 8.0:
+			show_help_hint(interaction.help_hint())
+			return
 		if kind == "align":
 			for index in range(2):
 				if event.position.distance_to(hotspot(index)) <= 36.0:
@@ -571,31 +661,50 @@ func _gui_input(event: InputEvent) -> void:
 				held_dial = true
 				_update_dial(event.position)
 		elif kind == "sequence":
-			if layout.has("sequence_sources") and interaction.stage < layout.sequence_sources.size() and layout.sequence_sources[interaction.stage] != null:
-				var current: int = interaction.stage
-				if current < layout.sequence_sources.size() and event.position.distance_to(_panel_point(layout.sequence_sources[current])) <= 45.0 * _scale():
-					held_sequence = true
+			var handled := false
+			for index in range(layout.points.size()):
+				if interaction.is_step_done(index):
+					continue
+				if _is_draggable(index):
+					if event.position.distance_to(_panel_point(layout.sequence_sources[index])) <= 45.0 * _scale():
+						held_sequence = true
+						held_index = index
+						pointer = event.position
+						handled = true
+						break
+				elif event.position.distance_to(hotspot(index)) <= 34.0:
+					interaction.press_art_sequence(index)
+					handled = true
+					break
+			if handled:
+				queue_redraw()
+		else:
+			if _single_tool():
+				if event.position.distance_to(source_point(0)) <= 36.0:
+					held_source = true
+					held_index = -1
 					pointer = event.position
 					queue_redraw()
 			else:
 				for index in range(layout.points.size()):
-					if event.position.distance_to(hotspot(index)) <= 34.0:
-						interaction.press_art_sequence(index)
+					if interaction.is_step_done(index):
+						continue
+					if event.position.distance_to(source_point(index)) <= 36.0:
+						held_source = true
+						held_index = index
+						pointer = event.position
 						queue_redraw()
 						break
-		else:
-			var stage_now: int = interaction.stage
-			if stage_now < layout.points.size() and event.position.distance_to(source_point(stage_now)) <= 36.0:
-				held_source = true
-				pointer = event.position
-				queue_redraw()
-	elif held_sequence:
+		return
+	# Release.
+	if held_sequence:
 		held_sequence = false
-		var current: int = interaction.stage
-		if current < layout.sequence_targets.size() and event.position.distance_to(_panel_point(layout.sequence_targets[current])) <= 57.0 * _scale():
-			interaction.press_art_sequence(current)
+		var target := _panel_point(layout.sequence_targets[held_index])
+		if event.position.distance_to(target) <= 57.0 * _scale():
+			interaction.press_art_sequence(held_index)
 		else:
-			interaction.mistake.emit("把工具移到需要处理的部位，再松开。")
+			interaction.fail_sequence_drop(held_index)
+		held_index = -1
 		queue_redraw()
 	elif active_parameter >= 0:
 		active_parameter = -1
@@ -605,15 +714,31 @@ func _gui_input(event: InputEvent) -> void:
 		interaction.try_finish_from_art()
 	elif held_source:
 		held_source = false
-		var stage_now: int = interaction.stage
-		if stage_now < layout.points.size() and event.position.distance_to(hotspot(stage_now)) <= 38.0:
-			if floor_id == 0 and task_id == 0:
-				scraping = true
-				scrape_time = 0.0
+		if _single_tool():
+			var best := -1
+			var best_distance := 38.0
+			for index in range(layout.points.size()):
+				if interaction.is_step_done(index):
+					continue
+				var d: float = event.position.distance_to(hotspot(index))
+				if d <= best_distance:
+					best_distance = d
+					best = index
+			if best >= 0:
+				if floor_id == 0 and task_id == 0:
+					scrape_target_index = best
+					scraping = true
+					scrape_time = 0.0
+				else:
+					interaction.drop_art_part(best)
 			else:
-				interaction.drop_art_part()
+				interaction.fail_art_drop()
 		else:
-			interaction.fail_art_drop()
+			if event.position.distance_to(hotspot(held_index)) <= 38.0:
+				interaction.drop_art_part(held_index)
+			else:
+				interaction.fail_art_drop(held_index)
+		held_index = -1
 		queue_redraw()
 
 
