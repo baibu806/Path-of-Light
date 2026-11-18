@@ -5,6 +5,9 @@ const HINT_FONT := preload("res://assets/fonts/SourceHanSerifSC-SemiBold.otf")
 const TOOL_ATLAS := preload("res://assets/ui/interaction_tool_cutouts_v1.png")
 const EXTRA_TOOL_ATLAS := preload("res://assets/ui/interaction_tool_cutouts_extra_v1.png")
 const FOUNDATION_REPAIRED := preload("res://assets/ui/Floors/Floor01_Foundation/Panels/foundation_inspection_repaired_v1.png")
+const PIPE_NETWORK := preload("res://scripts/pipe_network.gd")
+const CIRCUIT_NETWORK := preload("res://scripts/circuit_network.gd")
+const GEAR_TRAIN := preload("res://scripts/gear_train_puzzle.gd")
 
 # Coordinates are in each panel's native pixels. The painted control is the
 # hit target; instructions appear after the player pauses or asks for help.
@@ -73,6 +76,9 @@ var held_index := -1
 var scraping := false
 var scrape_time := 0.0
 var scrape_target_index := -1
+var scrape_distance := 0.0
+var scrape_previous := Vector2.ZERO
+var scrape_index := -1
 var held_dial := false
 var active_parameter := -1
 var parameter_start := Vector2.ZERO
@@ -87,6 +93,9 @@ var pointer := Vector2.ZERO
 var panel_texture: Texture2D
 var floor_id := 0
 var task_id := 0
+var pipe_network: Control
+var circuit_network: Control
+var gear_train: Control
 
 
 func _ready() -> void:
@@ -101,12 +110,35 @@ func configure(floor_number: int, task_number: int, target_interaction: Control,
 	panel_texture = artwork
 	floor_id = floor_number
 	task_id = task_number
+	if pipe_network == null:
+		pipe_network = PIPE_NETWORK.new()
+		pipe_network.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(pipe_network)
+		pipe_network.solved.connect(func() -> void: interaction._finish())
+	if circuit_network == null:
+		circuit_network = CIRCUIT_NETWORK.new()
+		circuit_network.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(circuit_network)
+		circuit_network.solved.connect(func() -> void: interaction._finish())
+	if gear_train == null:
+		gear_train = GEAR_TRAIN.new()
+		gear_train.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		add_child(gear_train)
+		gear_train.solved.connect(func() -> void: interaction._finish())
+	pipe_network.visible = floor_number == 1 and task_number == 1
+	circuit_network.visible = floor_number == 2 and task_number == 1
+	gear_train.visible = floor_number == 3 and task_number == 1
+	if pipe_network.visible: pipe_network.reset()
+	if circuit_network.visible: circuit_network.reset()
+	if gear_train.visible: gear_train.reset()
 	held_source = false
 	held_sequence = false
 	held_index = -1
 	scraping = false
 	scrape_time = 0.0
 	scrape_target_index = -1
+	scrape_index = -1
+	scrape_distance = 0.0
 	held_dial = false
 	active_parameter = -1
 	hint_text = ""
@@ -199,6 +231,8 @@ func _single_tool() -> bool:
 func _draw() -> void:
 	if interaction == null or layout.is_empty():
 		return
+	if (pipe_network != null and pipe_network.visible) or (circuit_network != null and circuit_network.visible) or (gear_train != null and gear_train.visible):
+		return
 	var kind := str(interaction.config.kind)
 	var points: Array = layout.points
 	_draw_physical_state()
@@ -215,6 +249,10 @@ func _draw() -> void:
 
 	# Target hotspots: every unfinished step is operable.
 	for index in range(points.size()):
+		if floor_id == 0 and task_id == 0:
+			if not interaction.is_step_done(index) and not hint_text.is_empty():
+				draw_arc(hotspot(index), 24.0 * _scale(), 0, TAU, 32, Color(0.75, 0.88, 0.89, 0.6), 2.0 * _scale(), true)
+			continue
 		var done: bool = interaction.is_step_done(index)
 		if kind in ["sequence", "drag"]:
 			if done:
@@ -628,7 +666,7 @@ func _draw_hint() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if interaction == null or interaction.finished or scraping:
+	if interaction == null or interaction.finished or (scraping and not (floor_id == 0 and task_id == 0)):
 		return
 	var kind := str(interaction.config.kind)
 	if kind not in ["sequence", "drag", "align", "dial"]:
@@ -636,6 +674,8 @@ func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		if held_source or held_sequence:
 			pointer = event.position
+			if held_source and floor_id == 0 and task_id == 0:
+				_update_foundation_scrape(event.position)
 			queue_redraw()
 		if held_dial:
 			_update_dial(event.position)
@@ -714,6 +754,13 @@ func _gui_input(event: InputEvent) -> void:
 		interaction.try_finish_from_art()
 	elif held_source:
 		held_source = false
+		if floor_id == 0 and task_id == 0:
+			scraping = false
+			scrape_index = -1
+			scrape_distance = 0.0
+			held_index = -1
+			queue_redraw()
+			return
 		if _single_tool():
 			var best := -1
 			var best_distance := 38.0
@@ -739,6 +786,28 @@ func _gui_input(event: InputEvent) -> void:
 			else:
 				interaction.fail_art_drop(held_index)
 		held_index = -1
+		queue_redraw()
+
+
+func _update_foundation_scrape(point: Vector2) -> void:
+	var candidate := -1
+	for index in range(layout.points.size()):
+		if not interaction.is_step_done(index) and point.distance_to(hotspot(index)) <= 43.0 * _scale():
+			candidate = index
+			break
+	if candidate != scrape_index:
+		scrape_index = candidate
+		scrape_distance = 0.0
+		scrape_previous = point
+		return
+	if candidate < 0:
+		return
+	scrape_distance += minf(point.distance_to(scrape_previous), 25.0 * _scale())
+	scrape_previous = point
+	if scrape_distance >= 80.0 * _scale():
+		scrape_index = -1
+		scrape_distance = 0.0
+		interaction.drop_art_part(candidate)
 		queue_redraw()
 
 

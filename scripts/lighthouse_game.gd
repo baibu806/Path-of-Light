@@ -1438,6 +1438,7 @@ func _open_challenge(task_index: int) -> void:
 		challenge_close_button.position.x -= 120.0
 	repair_interaction.configure(floor_index, task_index)
 	challenge_art_overlay.configure(floor_index, task_index, repair_interaction, native_size, challenge_art.texture)
+	challenge_art.visible = not (floor_index in [1, 2, 3] and task_index == 1)
 	challenge_idle_seconds = 0.0
 	challenge_error_seconds = 0.0
 	challenge_overlay.show()
