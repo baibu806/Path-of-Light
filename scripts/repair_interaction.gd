@@ -10,7 +10,7 @@ signal step_completed
 # illustration remains the original floor panel; this control is its operable part.
 const TASKS := [
 	[
-		{"kind": "drag", "instruction": "按住画面中的刮刀，刮净四处盐霜（顺序任意）。", "parts": ["刮刀", "刮刀", "刮刀", "刮刀"], "targets": ["左上盐霜", "右侧盐霜", "左下盐霜", "中央盐霜"]},
+		{"kind": "drag", "free_scrape": true, "instruction": "寻找盐霜，用刮刀来回清理；四处可以任意顺序处理。", "parts": ["刮刀", "刮刀", "刮刀", "刮刀"], "targets": ["左上盐霜", "右侧盐霜", "左下盐霜", "中央盐霜"]},
 		{"kind": "sequence", "interaction": "drag_sequence", "instruction": "拖动石料与工具到修复处，选材、清缝、轻敲、填补，顺序任意。", "items": ["选稳固石料", "清理接缝", "轻敲空鼓", "填补砂浆"]},
 		{"kind": "align", "instruction": "调节砂浆配比与承压负载，再锁定测试。", "labels": ["砂浆配比", "承压负载"], "targets": [62, 74], "tolerance": 8}
 	],
@@ -163,6 +163,8 @@ func current_step_text() -> String:
 func art_hint() -> String:
 	if config.is_empty() or finished:
 		return ""
+	if config.get("free_scrape", false):
+		return "拿起刮刀，在盐霜上来回刮擦。"
 	var index := _first_open()
 	match _kind():
 		"sequence":
@@ -190,6 +192,8 @@ func art_hint() -> String:
 func help_hint() -> String:
 	if config.is_empty() or finished:
 		return ""
+	if config.get("free_scrape", false):
+		return "按住刮刀拖到盐霜上，保持按住并来回刮擦。"
 	var index := _first_open()
 	match _kind():
 		"sequence":

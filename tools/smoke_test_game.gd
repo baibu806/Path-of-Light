@@ -102,6 +102,9 @@ func run() -> void:
 				assert(game.challenge_art_overlay.hint_text.is_empty())
 				_art_drag(game.challenge_art_overlay, game.challenge_art_overlay.source_point(0), Vector2(210, 330))
 				assert(game.progress[floor_index] == 0)
+				assert(game.mistakes[floor_index] == 0)
+			if floor_index == 0 and task_index == 1:
+				_art_drag(game.challenge_art_overlay, game.challenge_art_overlay._panel_point(game.challenge_art_overlay.layout.sequence_sources[0]), Vector2.ZERO)
 				assert(game.mistakes[floor_index] == 1)
 			await _solve_interaction(game.repair_interaction, game.challenge_art_overlay)
 			for animation_frame in range(100):
@@ -159,10 +162,30 @@ func _solve_interaction(interaction: Control, art: Control) -> void:
 				else:
 					_art_click(art, art.hotspot(index))
 		"drag":
-			for index in range(interaction.config.parts.size()):
-				_art_drag(art, art.source_point(index), art.hotspot(index))
-				if art.scraping:
-					await create_timer(0.45).timeout
+			if art.floor_id == 1 and art.task_id == 1:
+				var network: Control = art.pipe_network
+				assert(not network.inspect_network().success)
+				network.pieces = {Vector2i(0, 1): 9, Vector2i(0, 0): 6, Vector2i(1, 0): 10, Vector2i(2, 0): 12, Vector2i(2, 1): 3}
+				assert(network.inspect_network().success)
+				network.check_network()
+			elif art.floor_id == 2 and art.task_id == 1:
+				var circuit: Control = art.circuit_network
+				circuit.fuse_installed = true
+				circuit.wires = [[0, 2], [3, 4], [5, 6], [7, 1]]
+				circuit.switch_on = true
+				circuit._test_circuit()
+			elif art.floor_id == 3 and art.task_id == 1:
+				var gears: Control = art.gear_train
+				gears.slots = [0, 1, 2]
+				assert(gears.transmission().valid)
+				gears.start_test()
+				gears._process(3.1)
+			elif interaction.config.get("free_scrape", false):
+				for index in [3, 1, 0, 2]:
+					_art_scrape(art, index)
+			else:
+				for index in range(interaction.config.parts.size()):
+					_art_drag(art, art.source_point(index), art.hotspot(index))
 		"align":
 			for index in range(2):
 				var start: Vector2 = art.hotspot(index)
@@ -187,6 +210,16 @@ func _drag(interaction: Control, start: Vector2, target: Vector2) -> void:
 	motion.position = target
 	interaction._gui_input(motion)
 	_mouse_button(interaction, target, false)
+
+
+func _art_scrape(art: Control, index: int) -> void:
+	var center: Vector2 = art.hotspot(index)
+	_mouse_button(art, art.source_point(0), true)
+	for offset in [Vector2.ZERO, Vector2(18, 0), Vector2(-18, 0), Vector2(18, 0), Vector2(-18, 0), Vector2(18, 0), Vector2(-18, 0)]:
+		var event := InputEventMouseMotion.new()
+		event.position = center + offset * art._scale()
+		art._gui_input(event)
+	_mouse_button(art, center, false)
 
 
 func _art_click(art: Control, point: Vector2) -> void:
